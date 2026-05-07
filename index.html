@@ -18,6 +18,16 @@
       --ff-head:'Fraunces',serif;--ff-body:'Epilogue',sans-serif;--ff-mono:'JetBrains Mono',monospace;
       --r:12px;
     }
+    body.light{
+      --bg:#f0eef8;--bg1:#e8e4f4;--bg2:#ddd8f0;--surf:#ffffff;--surf2:#f0eef8;
+      --bord:#d0c8e8;--bord2:#bab0d8;
+      --pur:#7c3aed;--pur-d:#5b21b6;--pur-glow:rgba(124,58,237,.12);--pur-soft:rgba(124,58,237,.06);--pur-mid:rgba(124,58,237,.10);
+      --grn:#0b9e6d;--grn-d:#066b4a;--grn-glow:rgba(11,158,109,.12);--grn-soft:rgba(11,158,109,.05);
+      --amb:#d97706;--red:#dc2626;--txt:#1e1533;--txt2:#4c3d7a;--mute:#8878b0;
+    }
+    .light-btn{background:none;border:1px solid var(--bord2);border-radius:8px;cursor:pointer;font-family:var(--ff-mono);font-size:.6rem;color:var(--txt2);padding:.28rem .7rem;transition:all .2s;white-space:nowrap}
+    .light-btn:hover{border-color:var(--pur);color:var(--pur)}
+    .light-btn.on{background:var(--pur-soft);border-color:var(--pur);color:var(--pur)}
     html{scroll-behavior:smooth}
     body{background:var(--bg);color:var(--txt);font-family:var(--ff-body);min-height:100vh;overflow-x:hidden}
     #atm{position:fixed;inset:0;pointer-events:none;z-index:0}
@@ -244,6 +254,7 @@
       <div class="badge-live"><span class="dot-live"></span>LIVE DATA</div>
       <p class="ts" id="ts"></p>
       <div class="hdr-btns">
+        <button class="light-btn" id="light-btn" onclick="toggleLight()">&#x2600; Light</button>
         <button class="btn-hdr grn" onclick="toggleUpload()">&#x2191; Update Archived Leads</button>
         <button class="btn-hdr" onclick="init()">&#x21BA; Refresh</button>
       </div>
@@ -2298,6 +2309,24 @@ function toggleStar(){
   renderPipeline();
   if(document.getElementById('pl-expanded').style.display!=='none') renderPlDiveTbl();
 }
+
+function toggleLight(){
+  const isLight = document.body.classList.toggle('light');
+  const btn = document.getElementById('light-btn');
+  if(btn){ btn.classList.toggle('on', isLight); btn.textContent = isLight ? '🌙 Dark' : '☀️ Light'; }
+  try{ localStorage.setItem('tt-light', isLight?'1':'0'); }catch(e){}
+}
+
+// Restore preference on load
+(function(){
+  try{ if(localStorage.getItem('tt-light')==='1'){ document.body.classList.add('light'); } }catch(e){}
+  // Update button after DOM ready
+  document.addEventListener('DOMContentLoaded', function(){
+    const isLight = document.body.classList.contains('light');
+    const btn = document.getElementById('light-btn');
+    if(btn){ btn.classList.toggle('on', isLight); btn.textContent = isLight ? '🌙 Dark' : '☀️ Light'; }
+  });
+})();
 
 function setMode(m){
   S_MODE = m;
