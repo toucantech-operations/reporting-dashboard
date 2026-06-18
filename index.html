@@ -35,7 +35,7 @@
     #atm span:nth-child(1){width:800px;height:800px;top:-260px;left:-180px;background:radial-gradient(circle,rgba(124,58,237,.13) 0%,transparent 68%)}
     #atm span:nth-child(2){width:600px;height:600px;bottom:-180px;right:-120px;background:radial-gradient(circle,rgba(31,222,158,.10) 0%,transparent 68%)}
     #atm span:nth-child(3){width:300px;height:300px;top:40%;left:50%;background:radial-gradient(circle,rgba(176,110,243,.06) 0%,transparent 70%)}
-    .wrap{position:relative;z-index:1;max-width:1300px;margin:0 auto;padding:2.5rem 1.75rem 5rem}
+    .wrap{position:relative;z-index:1;max-width:1600px;margin:0 auto;padding:2rem 1.25rem 5rem}
     .hdr{display:flex;align-items:flex-start;justify-content:space-between;gap:1.5rem;margin-bottom:2rem;padding-bottom:2rem;border-bottom:1px solid var(--bord);flex-wrap:wrap}
     .hdr-l h1{font-family:var(--ff-head);font-size:clamp(2.4rem,5vw,3.8rem);font-weight:900;letter-spacing:-.03em;line-height:1}
     .hdr-l h1 i{font-style:italic;color:var(--pur);font-weight:300}
@@ -211,7 +211,7 @@
     .dtab.on{color:var(--grn);border-bottom-color:var(--grn)}.dtab:hover:not(.on){color:var(--txt2)}
     .tbl-wrap{overflow-x:auto}
     .tbl-wrap.dive-tbl-wrap{overflow-x:visible}
-    .cell-wrap{white-space:normal;min-width:160px;max-width:280px;word-break:break-word;line-height:1.4}
+    .cell-wrap{white-space:normal;min-width:120px;max-width:220px;word-break:break-word;line-height:1.4}
     table{width:100%;border-collapse:collapse}
     thead th{background:var(--surf2);font-family:var(--ff-mono);font-size:.58rem;text-transform:uppercase;letter-spacing:.1em;color:var(--mute);padding:.68rem 1rem;text-align:left;white-space:nowrap;font-weight:400}
     tbody tr{border-top:1px solid var(--bord);transition:background .12s}
@@ -474,6 +474,20 @@
             <option value="Webinar">Webinar</option>
             <option value="Word of Mouth">Word of Mouth</option>
             </select>
+          <div class="pill-divider"></div>
+          <div style="display:flex;flex-direction:column;align-items:center;gap:.25rem;flex-shrink:0" id="dive-stage-wrap">
+            <span class="pill-label">Stage</span>
+            <select class="owner-select" id="dive-stage-select" onchange="setDiveStage(this.value)">
+              <option value="">All</option>
+              <option value="Qualified">Qualified</option>
+              <option value="Demo Booked">Demo Booked</option>
+              <option value="Demo Done">Demo Done</option>
+              <option value="S Proposal">S Proposal</option>
+              <option value="F Proposal">F Proposal</option>
+              <option value="Negotiation">Negotiation</option>
+              <option value="Awaiting Contract">Awaiting Contract</option>
+            </select>
+          </div>
         </div>
       </div>
       <div class="tbl-wrap dive-tbl-wrap" id="dive-tbl"></div>
@@ -741,6 +755,20 @@
           </div>
           <div class="pill-divider"></div>
           <div style="display:flex;flex-direction:column;align-items:center;gap:.25rem;flex-shrink:0">
+            <span class="pill-label">Stage</span>
+            <select class="owner-select" id="lost-stage-select" onchange="renderLostTable()" style="font-size:.58rem">
+              <option value="">All</option>
+              <option value="Qualified">Qualified</option>
+              <option value="Demo Booked">Demo Booked</option>
+              <option value="Demo Done">Demo Done</option>
+              <option value="S Proposal">S Proposal</option>
+              <option value="F Proposal">F Proposal</option>
+              <option value="Negotiation">Negotiation</option>
+              <option value="Awaiting Contract">Awaiting Contract</option>
+            </select>
+          </div>
+          <div class="pill-divider"></div>
+          <div style="display:flex;flex-direction:column;align-items:center;gap:.25rem;flex-shrink:0">
             <span class="pill-label">Source</span>
             <select class="owner-select" id="lost-source-select" onchange="renderLostTable()" style="font-size:.58rem">
               <option value="">All</option>
@@ -760,6 +788,20 @@
               <option value="TBC">TBC</option>
               <option value="Webinar">Webinar</option>
               <option value="Word of Mouth">Word of Mouth</option>
+            </select>
+          </div>
+          <div class="pill-divider"></div>
+          <div style="display:flex;flex-direction:column;align-items:center;gap:.25rem;flex-shrink:0">
+            <span class="pill-label">Stage Lost</span>
+            <select class="owner-select" id="lost-stage-select" onchange="renderLostTable()" style="font-size:.58rem">
+              <option value="">All</option>
+              <option value="Qualified">Qualified</option>
+              <option value="Demo Booked">Demo Booked</option>
+              <option value="Demo Done">Demo Done</option>
+              <option value="S Proposal">S Proposal</option>
+              <option value="F Proposal">F Proposal</option>
+              <option value="Negotiation">Negotiation</option>
+              <option value="Awaiting Contract">Awaiting Contract</option>
             </select>
           </div>
           <div class="pill-divider"></div>
@@ -829,7 +871,7 @@ async function fetchLostDeals(yr){
 function setLostYear(yr){
   lostState.year=yr; lostState.deals=null; lostState.loaded=false;
   lostFilters.region=null; lostFilters.sector=null;
-  ['lost-owner-select','lost-source-select','lost-reason-select'].forEach(id=>{
+  ['lost-owner-select','lost-stage-select','lost-source-select','lost-reason-select'].forEach(id=>{
     const el=document.getElementById(id); if(el) el.value='';
   });
   [2025,2026].forEach(function(y){ const b=document.getElementById('lost-yr-'+y); if(b) b.classList.toggle('active',y===yr); });
@@ -980,6 +1022,7 @@ function renderLostTable(){
   const rg=d=>Object.keys(REGION_ID).find(r=>REGION_ID[r]===Number(d[REGION_FIELD]))||'--';
   const sg=d=>Object.keys(SECTOR_ID).find(s=>SECTOR_ID[s]===Number(d[SECTOR_FIELD]))||'--';
   const fo=document.getElementById('lost-owner-select')?.value||'';
+  const fLostStage=document.getElementById('lost-stage-select')?.value||'';
   const fSource=document.getElementById('lost-source-select')?.value||'';
   const fReason=document.getElementById('lost-reason-select')?.value||'';
 
@@ -987,7 +1030,10 @@ function renderLostTable(){
   if(fo) items=items.filter(d=>(d.owner_name||'').startsWith(fo));
   if(lostFilters.region) items=items.filter(d=>rg(d)===lostFilters.region);
   if(lostFilters.sector) items=items.filter(d=>sg(d)===lostFilters.sector);
+  if(fLostStage) items=items.filter(d=>stageName(d)===fLostStage);
   if(fSource) items=items.filter(d=>getAttr(d[ATTR_FIELD])===fSource);
+  const fStage=document.getElementById('lost-stage-select')?.value||'';
+  if(fStage) items=items.filter(d=>stageName(d)===fStage);
   if(fReason) items=items.filter(d=>(d.lost_reason||'').startsWith(fReason.split(' (')[0]));
   items.sort((a,b)=>new Date(b.lost_time)-new Date(a.lost_time));
   const countEl=document.getElementById('lost-filtered-count');
@@ -997,21 +1043,23 @@ function renderLostTable(){
   if(!tbl) return;
   if(!items.length){ tbl.innerHTML='<tr><td class="empty" colspan="9">No lost deals match these filters.</td></tr>'; return; }
   tbl.innerHTML='<table style="table-layout:fixed;width:100%"><thead><tr>'
-    +'<th class="cell-wrap" style="width:18%">Title</th>'
+    +'<th class="cell-wrap" style="width:17%">Title</th>'
     +'<th style="width:5%">Owner</th>'
     +'<th style="width:5%">Region</th>'
-    +'<th class="cell-wrap" style="width:8%">Sector</th>'
-    +'<th class="cell-wrap" style="width:9%">Origin</th>'
-    +'<th class="cell-wrap" style="width:9%">Source</th>'
-    +'<th class="cell-wrap" style="width:14%">Lost Reason</th>'
-    +'<th class="cell-wrap" style="width:24%">Comments</th>'
-    +'<th style="width:8%">Lost</th>'
+    +'<th class="cell-wrap" style="width:7%">Sector</th>'
+    +'<th style="width:7%">Stage</th>'
+    +'<th class="cell-wrap" style="width:8%">Origin</th>'
+    +'<th class="cell-wrap" style="width:8%">Source</th>'
+    +'<th class="cell-wrap" style="width:12%">Lost Reason</th>'
+    +'<th class="cell-wrap" style="width:22%">Comments</th>'
+    +'<th style="width:9%">Lost</th>'
     +'</tr></thead><tbody>'
     +items.map(d=>'<tr>'
       +'<td class="cell-wrap"><a href="https://toucantech.pipedrive.com/deal/'+d.id+'" target="_blank" style="color:var(--pur);text-decoration:none">'+esc(d.title)+'</a></td>'
       +'<td class="tdm">'+esc((d.owner_name||'--').split(' ')[0])+'</td>'
       +'<td class="tdm">'+esc(rg(d))+'</td>'
       +'<td class="cell-wrap tdm">'+esc(sg(d))+'</td>'
+      +'<td class="tdm">'+esc(stageName(d))+'</td>'
       +'<td class="cell-wrap tdm">'+esc(classifyDeal(d)).split('|').join('<br>')+'</td>'
       +'<td class="cell-wrap tdm">'+esc(getAttr(d[ATTR_FIELD]))+(getAttrDetail(d)?'<br><span style="color:var(--mute)">'+esc(getAttrDetail(d))+'</span>':'')+'</td>'
       +'<td class="cell-wrap tdm">'+esc((d.lost_reason||'--').replace('Chose a competitor (please enter which in lost deal comments)','Chose a competitor').replace('Other (please specify in lost deal comments field)','Other'))+'</td>'
@@ -2046,6 +2094,7 @@ function sortItems(items){
     else if(col==='sector'){ av=(a.sector||Object.keys(SECTOR_ID).find(s=>SECTOR_ID[s]===Number(a[SECTOR_FIELD]))||'').toLowerCase(); bv=(b.sector||Object.keys(SECTOR_ID).find(s=>SECTOR_ID[s]===Number(b[SECTOR_FIELD]))||'').toLowerCase(); }
     else if(col==='origin'){ av=(a.source||classifyDeal(a)||'').toLowerCase(); bv=(b.source||classifyDeal(b)||'').toLowerCase(); }
     else if(col==='source'){ av=(a.attr||getAttr(a[ATTR_FIELD])||'').toLowerCase(); bv=(b.attr||getAttr(b[ATTR_FIELD])||'').toLowerCase(); }
+    else if(col==='stage'){ av=stageName(a).toLowerCase(); bv=stageName(b).toLowerCase(); }
     else if(col==='status'){ av=(a.status||a.status||'').toLowerCase(); bv=(b.status||b.status||'').toLowerCase(); }
     else if(col==='date'){ av=new Date(a.date||a.add_time||0); bv=new Date(b.date||b.add_time||0); }
     else { av=''; bv=''; }
@@ -2056,7 +2105,7 @@ function sortItems(items){
 }
 
 const DIVE_SOURCES = ['Website Booking','Personal Link','Chatbot','Conference','Manually Added','Surfe / LinkedIn','Converted Lead'];
-const diveFilters = {owner:null, region:null, sector:null, source:null, attr:null};
+const diveFilters = {owner:null, region:null, sector:null, source:null, attr:null, stage:null};
 
 function renderDiveFilters(){
   const rp=document.getElementById('dive-region-pills');
@@ -2081,6 +2130,7 @@ function renderDiveFilters(){
 function setDiveOwner(val){ diveFilters.owner=val||null; renderDiveFilters(); renderDiveTbl(); }
 function setDiveSource(val){ diveFilters.source=val||null; renderDiveFilters(); renderDiveTbl(); }
 function setDiveAttr(val){ diveFilters.attr=val||null; renderDiveFilters(); renderDiveTbl(); }
+function setDiveStage(val){ diveFilters.stage=val||null; renderDiveTbl(); }
 
 document.addEventListener('click', function(e){
   const btn = e.target.closest('[data-dive-owner],[data-dive-region],[data-dive-sector],[data-dive-source]');
@@ -2119,6 +2169,9 @@ function applyDiveFilter(items, isLead, isArchived){
     if(diveFilters.attr){
       var attrVal = isArchived ? (item.attr||'--') : getAttr(item[ATTR_FIELD]);
       if(attrVal!==diveFilters.attr) return false;
+    }
+    if(diveFilters.stage && !isLead && !isArchived){
+      if(stageName(item)!==diveFilters.stage) return false;
     }
     return true;
   });
@@ -2166,6 +2219,8 @@ function renderDiveTbl(){
   if(S.diveTab==='deals'){
     const items=applyDiveFilter([...m.deals],false,false).sort((a,b)=>new Date(b.add_time)-new Date(a.add_time));
     if(!items.length){$('dive-tbl').innerHTML='<div class="empty">No new deals this month.</div>';return;}
+    const fStage=document.getElementById('dive-stage-select')?.value||'';
+    if(fStage) items=items.filter(d=>stageName(d)===fStage);
     const sortedDeals=sortItems(items);
     $('dive-tbl').innerHTML='<table style="table-layout:fixed;width:100%"><thead><tr>'
       +'<th class="cell-wrap">Title'+sortIcon('title')+'</th>'
@@ -2477,6 +2532,9 @@ function switchPlTab(tab){
   // Show/hide stage filter
   const stageParts = ['pl-stage-divider','pl-stage-wrap'];
   stageParts.forEach(id=>{ const el=document.getElementById(id); if(el) el.style.display=tab==='deals'?'':'none'; });
+  const newOppsStage=document.getElementById('new-opps-stage-wrap');
+  // New opps dive: show stage only on deals tab
+  if(newOppsStage) newOppsStage.style.display='';
   renderPlRegionSectorPills();
   renderPlDiveTbl();
 }
