@@ -832,7 +832,7 @@
   <footer>PIPEDRIVE DASHBOARD &middot; MAIN PIPELINE &middot; DATA &copy; PIPEDRIVE &middot; CONFIDENTIAL</footer>
 </div>
 <script>
-const API_TOKEN       = '61d3d6dd5ff041a05ffc62b30b5ea05442382c93';
+const WORKER_URL      = 'https://opportunities-analysis.felicity-c91.workers.dev';
 const EXCLUDED_PIPELINE = 9;
 const STAR_LABEL_ID = 1368;
 function isStarDeal(d){ return d.label===STAR_LABEL_ID || String(d.label)===String(STAR_LABEL_ID) || (d.title&&d.title.startsWith('***')); }
@@ -1093,13 +1093,13 @@ const salesState = {
 async function fetchCustomers(){
   let all=[], offset=null;
   while(true){
-    let url = `https://api.airtable.com/v0/${AT_BASE}/${AT_CUSTOMERS_TABLE}?pageSize=100`
+    let url = `${WORKER_URL}/airtable/${AT_BASE}/${AT_CUSTOMERS_TABLE}?pageSize=100`
       + `&fields[]=${encodeURIComponent(SALES_CUSTOMER_DATE_FIELD)}`
       + `&fields[]=${encodeURIComponent(SALES_DEAL_ID_FIELD)}`
       + `&fields[]=${encodeURIComponent(SALES_NAME_FIELD)}`
       + `&fields[]=${encodeURIComponent(SALES_OWNER_FIELD)}`;
     if(offset) url += '&offset='+encodeURIComponent(offset);
-    const r = await fetch(url, {headers:{'Authorization':'Bearer '+AT_TOKEN,'Content-Type':'application/json'}});
+    const r = await fetch(url.replace('https://api.airtable.com/v0', WORKER_URL+'/airtable'));
     if(!r.ok) throw new Error('Customers fetch failed: '+r.status);
     const d = await r.json();
     all = all.concat(d.records||[]);
@@ -1515,7 +1515,7 @@ function classifyArchivedLead(l){
 const LEAD_DATE_FIELD = '7dbac76a365841c9ab9c494fc52b8186849bb742';
 const REGION_FIELD    = '2f8f785f22d986dcf51775b73af98a140a34c5ae';
 const SECTOR_FIELD    = 'cd63d398be9a5c23147344f38f1ae37fb81fc60a';
-const AT_TOKEN        = 'patPYjR2vQ2YOoWKt.48823a6794cf304ed4f9f0e107fd205b29c6cfa39552a927362ee41f66fad4e9';
+// AT_TOKEN handled by Cloudflare Worker
 const AT_BASE         = 'appRsF7Zfa3iKjTFD';
 const AT_TABLE        = 'tblf16aeWs3w3yMcU';
 const REGIONS         = ['EMEA','AMER','APAC'];
@@ -1556,8 +1556,7 @@ function isConvertedDeal(d){ return !!(d[LEAD_DATE_FIELD]); }
 
 /* ── Pipedrive ── */
 async function pd(path){
-  const sep=path.includes('?')?'&':'?';
-  const r=await fetch('https://api.pipedrive.com/v1'+path+sep+'api_token='+encodeURIComponent(API_TOKEN));
+  const r=await fetch(WORKER_URL+'/pipedrive'+path);
   if(!r.ok){ const e=await r.json().catch(()=>({})); throw new Error(e.error||'HTTP '+r.status); }
   return r.json();
 }
@@ -1620,8 +1619,8 @@ async function fetchCurrency(){
 
 /* ── Airtable ── */
 async function atFetch(path,opts={}){
-  const r=await fetch('https://api.airtable.com/v0/'+AT_BASE+'/'+AT_TABLE+path,{
-    ...opts,headers:{'Authorization':'Bearer '+AT_TOKEN,'Content-Type':'application/json',...(opts.headers||{})}
+  const r=await fetch(WORKER_URL+'/airtable/'+AT_BASE+'/'+AT_TABLE+path,{
+    ...opts,headers:{'Content-Type':'application/json',...(opts.headers||{})}
   });
   if(!r.ok){ const e=await r.json().catch(()=>({})); throw new Error(e.error?.message||'Airtable HTTP '+r.status); }
   return r.json();
