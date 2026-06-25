@@ -838,6 +838,19 @@ let starMode = false;
 /* ═══════════════════════════════════════
    LOST DEALS MODE
 ═══════════════════════════════════════ */
+const LOSS_REASONS_DISPLAY = [
+  ['Bad fit/ not the right product for prospect','Bad fit/ not the right product for prospect'],
+  ['Chose a competitor','Chose a competitor (please enter which in lost deal comments)'],
+  ['Low budget','Low budget'],
+  ['No budget','No budget (for those with no budget/thought it was free)'],
+  ['Not happy about UX','Not happy about UX'],
+  ['Not happy with features/ functionality','Not happy with features/ functionality'],
+  ["Not in market/ shouldn't have been a deal","Not in market/ shouldn't have been a deal"],
+  ['Other','Other (please specify in lost deal comments field)'],
+  ['Project paused','Project paused'],
+  ['Too early/not ready','Too early/not ready'],
+  ['Unresponsive','Unresponsive'],
+];
 const lostState = { year: 2026, deals: null, loaded: false };
 const lostStages = new Set(); // selected stages for multi-select
 
@@ -949,19 +962,7 @@ async function renderLost(){
       return '<tr><td style="font-family:var(--ff-mono);font-size:.58rem;color:var(--mute);padding:.1rem .5rem .1rem 0;white-space:nowrap">'+lbl+'</td>'
         +'<td style="font-family:var(--ff-mono);font-size:.65rem;color:var(--pur);text-align:right">'+n+'</td></tr>';
     }).join('')+'</table>';
-  const LOSS_REASONS_DISPLAY = [
-      ['Bad fit/ not the right product for prospect','Bad fit/ not the right product for prospect'],
-      ['Chose a competitor','Chose a competitor (please enter which in lost deal comments)'],
-      ['Low budget','Low budget'],
-      ['No budget','No budget (for those with no budget/thought it was free)'],
-      ['Not happy about UX','Not happy about UX'],
-      ['Not happy with features/ functionality','Not happy with features/ functionality'],
-      ["Not in market/ shouldn't have been a deal","Not in market/ shouldn't have been a deal"],
-      ['Other','Other (please specify in lost deal comments field)'],
-      ['Project paused','Project paused'],
-      ['Too early/not ready','Too early/not ready'],
-      ['Unresponsive','Unresponsive'],
-    ];
+
   const lostStatsEl=document.getElementById('lost-stats'); if(lostStatsEl) lostStatsEl.style.display='block';
   // Row 2: reason chart — initially rendered with all deals, updated by renderLostTable
   lostStatsEl.innerHTML +=
