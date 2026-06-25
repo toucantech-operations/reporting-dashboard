@@ -853,8 +853,6 @@ document.addEventListener('click', function(e){
 });
 function updateLostStages(){
   lostStages.clear();
-  document.querySelectorAll('#lost-stage-dropdown input').forEach(cb=>cb.checked=false);
-  const lsBtn=document.getElementById('lost-stage-btn'); if(lsBtn){lsBtn.textContent='All stages ▾';lsBtn.classList.remove('active');}
   document.querySelectorAll('#lost-stage-dropdown input:checked').forEach(cb=>lostStages.add(cb.value));
   const btn=document.getElementById('lost-stage-btn');
   if(btn){
