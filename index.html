@@ -852,7 +852,21 @@ const LOSS_REASONS_DISPLAY = [
   ['Unresponsive','Unresponsive'],
 ];
 const lostState = { year: 2026, deals: null, loaded: false };
-const lostStages = new Set(); // selected stages for multi-select
+const lostStages = new Set();
+const lostSort = {col:'date', dir:'desc'};
+
+function setLostSort(col){
+  if(lostSort.col===col){ lostSort.dir=lostSort.dir==='asc'?'desc':'asc'; }
+  else { lostSort.col=col; lostSort.dir=col==='date'?'desc':'asc'; }
+  renderLostTable();
+}
+
+function lostSortIcon(col){
+  if(lostSort.col!==col) return '<button class="sort-btn" onclick="setLostSort(&quot;'+col+'&quot;)">&#x21C5;</button>';
+  return lostSort.dir==='asc'
+    ? '<button class="sort-btn asc" onclick="setLostSort(&quot;'+col+'&quot;)">&#x2191;</button>'
+    : '<button class="sort-btn desc" onclick="setLostSort(&quot;'+col+'&quot;)">&#x2193;</button>';
+} // selected stages for multi-select
 
 function toggleMsDropdown(id){
   const dd = document.getElementById(id+'-dropdown');
@@ -1006,11 +1020,11 @@ function renderLostReasonChart(filteredDeals){
     }
   });
   pieSvg+='</svg>';
-  const legend='<table style="border-collapse:collapse;width:100%">'+pieDataAll.map(d=>
+  const legend='<table style="border-collapse:collapse;width:100%">'+pieDataAll.filter(d=>d.n>0).map(d=>
     '<tr>'
-    +'<td style="width:10px;padding:.15rem .4rem .15rem 0"><span style="width:8px;height:8px;border-radius:50%;background:'+d.color+';display:inline-block"></span></td>'
-    +'<td style="font-family:var(--ff-mono);font-size:.55rem;color:var(--mute);padding:.15rem .5rem .15rem 0;white-space:nowrap">'+esc(d.lbl)+'</td>'
-    +'<td style="font-family:var(--ff-mono);font-size:.58rem;color:var(--grn);text-align:right;white-space:nowrap">'+d.n+'</td>'
+    +'<td style="width:10px;padding:.2rem .5rem .2rem 0"><span style="width:9px;height:9px;border-radius:50%;background:'+d.color+';display:inline-block"></span></td>'
+    +'<td style="font-family:var(--ff-mono);font-size:.65rem;color:var(--mute);padding:.2rem .6rem .2rem 0;white-space:nowrap">'+esc(d.lbl)+'</td>'
+    +'<td style="font-family:var(--ff-mono);font-size:.68rem;color:var(--grn);text-align:right;white-space:nowrap;font-weight:600">'+d.n+'</td>'
     +'</tr>'
   ).join('')+'</table>';
   el.innerHTML=
@@ -1034,7 +1048,24 @@ function renderLostTable(){
   if(fSource) items=items.filter(d=>getAttr(d[ATTR_FIELD])===fSource);
   if(lostStages.size>0) items=items.filter(d=>lostStages.has(stageName(d)));
   if(fReason) items=items.filter(d=>(d.lost_reason||'').startsWith(fReason.split(' (')[0]));
-  items.sort((a,b)=>new Date(b.lost_time)-new Date(a.lost_time));
+  // Sort items
+  items.sort((a,b)=>{
+    const rg=d=>Object.keys(REGION_ID).find(r=>REGION_ID[r]===Number(d[REGION_FIELD]))||'--';
+    const sg=d=>Object.keys(SECTOR_ID).find(s=>SECTOR_ID[s]===Number(d[SECTOR_FIELD]))||'--';
+    let av,bv;
+    if(lostSort.col==='title'){av=(a.title||'').toLowerCase();bv=(b.title||'').toLowerCase();}
+    else if(lostSort.col==='owner'){av=(a.owner_name||'').toLowerCase();bv=(b.owner_name||'').toLowerCase();}
+    else if(lostSort.col==='region'){av=rg(a).toLowerCase();bv=rg(b).toLowerCase();}
+    else if(lostSort.col==='sector'){av=sg(a).toLowerCase();bv=sg(b).toLowerCase();}
+    else if(lostSort.col==='stage'){av=stageName(a).toLowerCase();bv=stageName(b).toLowerCase();}
+    else if(lostSort.col==='origin'){av=classifyDeal(a).toLowerCase();bv=classifyDeal(b).toLowerCase();}
+    else if(lostSort.col==='source'){av=getAttr(a[ATTR_FIELD]).toLowerCase();bv=getAttr(b[ATTR_FIELD]).toLowerCase();}
+    else if(lostSort.col==='reason'){av=(a.lost_reason||'').toLowerCase();bv=(b.lost_reason||'').toLowerCase();}
+    else{av=new Date(a.lost_time);bv=new Date(b.lost_time);}
+    if(av<bv) return lostSort.dir==='asc'?-1:1;
+    if(av>bv) return lostSort.dir==='asc'?1:-1;
+    return 0;
+  });
   const countEl=document.getElementById('lost-filtered-count');
   if(countEl) countEl.textContent=items.length+' deal'+(items.length!==1?'s':'');
   renderLostReasonChart(items);
