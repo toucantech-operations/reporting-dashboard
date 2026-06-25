@@ -962,80 +962,58 @@ async function renderLost(){
       ['Too early/not ready','Too early/not ready'],
       ['Unresponsive','Unresponsive'],
     ];
-  const reasonBreakdown = '<table style="border-collapse:collapse;width:100%">'
-    +LOSS_REASONS_DISPLAY.map(([lbl,val])=>{
-      const n=deals.filter(d=>(d.lost_reason||'').startsWith(val.split(' (')[0])).length;
-      if(!n) return '';
-      return '<tr><td style="font-family:var(--ff-mono);font-size:.58rem;color:var(--mute);padding:.1rem .5rem .1rem 0;white-space:nowrap">'+esc(lbl)+'</td>'
-        +'<td style="font-family:var(--ff-mono);font-size:.65rem;color:var(--pur);text-align:right">'+n+'</td></tr>';
-    }).filter(Boolean).join('')+'</table>';
-  // Split reasons into two groups of 6 and 5
-  // reason breakdowns replaced by legend
-  // Pie chart data
-  const pieData = LOSS_REASONS_DISPLAY.map(([lbl,val])=>({
-    lbl, n:deals.filter(d=>(d.lost_reason||'').startsWith(val.split(' (')[0])).length
-  }));
-  const pieDataAll = pieData; // keep all for legend/colour assignment
-  const pieDataActive = pieData.filter(x=>x.n>0); // only draw slices for active
-  const pieTotal = pieDataActive.reduce((s,x)=>s+x.n,0);
-  const pieColors = ['#7c3aed','#1fde9e','#f8c247','#e05c5c','#38bdf8','#a78bfa','#34d399','#fb923c','#f472b6','#60a5fa','#4ade80'];
-  // Assign colour by fixed reason index for consistency across years
-  pieDataAll.forEach(d=>{ d.color = pieColors[LOSS_REASONS_DISPLAY.findIndex(([lbl])=>lbl===d.lbl) % pieColors.length]; });
-  // Larger viewBox to allow labels outside the pie
-  let pieSvg = '<svg viewBox="0 0 260 140" style="width:100%;height:100%;display:block">';
-  let angle = -Math.PI/2;
-  const cx=130, cy=70, r=45, rOuter=52, rLabel=68;
-  pieDataActive.forEach((d,i)=>{
-    const slice = (d.n/pieTotal)*2*Math.PI;
-    const midAngle = angle + slice/2;
-    const x1=cx+r*Math.cos(angle), y1=cy+r*Math.sin(angle);
+  // Row 2: reason chart — initially rendered with all deals, updated by renderLostTable
+  lostStatsEl.innerHTML +=
+    '<div id="lost-reason-row" style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin-bottom:1.5rem;align-items:stretch"></div>';
+  renderLostReasonChart(deals);
+
+    const lyp=document.getElementById('lost-year-pills');
+  if(lyp) lyp.innerHTML=[2025,2026].map(function(y){ return '<button class="f-pill'+(lostState.year===y?' active':'')+'" onclick="setLostYear('+y+')">'+y+'</button>'; }).join('');
+  renderLostPills();
+  renderLostStagePills();
+  renderLostTable();
+}
+
+function renderLostReasonChart(filteredDeals){
+  const el=document.getElementById('lost-reason-row');
+  if(!el) return;
+  const pieColors=['#7c3aed','#1fde9e','#f8c247','#e05c5c','#38bdf8','#a78bfa','#34d399','#fb923c','#f472b6','#60a5fa','#4ade80'];
+  const pieDataAll=LOSS_REASONS_DISPLAY.map(([lbl,val])=>({lbl,n:filteredDeals.filter(d=>(d.lost_reason||'').startsWith(val.split(' (')[0])).length}));
+  pieDataAll.forEach(d=>{ d.color=pieColors[LOSS_REASONS_DISPLAY.findIndex(([l])=>l===d.lbl)%pieColors.length]; });
+  const pieDataActive=pieDataAll.filter(x=>x.n>0);
+  const pieTotal=pieDataActive.reduce((s,x)=>s+x.n,0);
+  let pieSvg='<svg viewBox="0 0 260 140" style="width:100%;height:100%;display:block">';
+  let angle=-Math.PI/2;
+  const cx=130,cy=70,r=45,rOuter=52,rLabel=68;
+  pieDataActive.forEach(d=>{
+    const slice=(d.n/pieTotal)*2*Math.PI,midAngle=angle+slice/2;
+    const x1=cx+r*Math.cos(angle),y1=cy+r*Math.sin(angle);
     angle+=slice;
-    const x2=cx+r*Math.cos(angle), y2=cy+r*Math.sin(angle);
+    const x2=cx+r*Math.cos(angle),y2=cy+r*Math.sin(angle);
     const large=slice>Math.PI?1:0;
     pieSvg+='<path d="M'+cx+','+cy+' L'+x1+','+y1+' A'+r+','+r+' 0 '+large+',1 '+x2+','+y2+' Z" fill="'+d.color+'" stroke="#1a1528" stroke-width="1.2"><title>'+esc(d.lbl)+': '+d.n+'</title></path>';
-    // Leader line + percentage label for slices >= 4%
-    if(slice >= 0.25){
+    if(slice>=0.25){
       const pct=Math.round(d.n/pieTotal*100);
-      const innerX=cx+(r+3)*Math.cos(midAngle), innerY=cy+(r+3)*Math.sin(midAngle);
-      const midX=cx+rOuter*Math.cos(midAngle), midY=cy+rOuter*Math.sin(midAngle);
-      const outerX=cx+rLabel*Math.cos(midAngle), outerY=cy+rLabel*Math.sin(midAngle);
-      const anchor=outerX>cx?'start':'end';
-      const labelX=outerX+(outerX>cx?3:-3);
-      pieSvg+='<line x1="'+innerX+'" y1="'+innerY+'" x2="'+midX+'" y2="'+midY+'" stroke="'+d.color+'" stroke-width="1" opacity="0.7"/>';
-      pieSvg+='<line x1="'+midX+'" y1="'+midY+'" x2="'+outerX+'" y2="'+outerY+'" stroke="'+d.color+'" stroke-width="1" opacity="0.7"/>';
-      pieSvg+='<text x="'+labelX+'" y="'+outerY+'" text-anchor="'+anchor+'" dominant-baseline="middle" fill="#ccc" font-size="7" font-family="monospace">'+pct+'%</text>';
+      const iX=cx+(r+3)*Math.cos(midAngle),iY=cy+(r+3)*Math.sin(midAngle);
+      const mX=cx+rOuter*Math.cos(midAngle),mY=cy+rOuter*Math.sin(midAngle);
+      const oX=cx+rLabel*Math.cos(midAngle),oY=cy+rLabel*Math.sin(midAngle);
+      const anc=oX>cx?'start':'end';
+      pieSvg+='<line x1="'+iX+'" y1="'+iY+'" x2="'+mX+'" y2="'+mY+'" stroke="'+d.color+'" stroke-width="1" opacity="0.7"/>';
+      pieSvg+='<line x1="'+mX+'" y1="'+mY+'" x2="'+oX+'" y2="'+oY+'" stroke="'+d.color+'" stroke-width="1" opacity="0.7"/>';
+      pieSvg+='<text x="'+(oX+(oX>cx?3:-3))+'" y="'+oY+'" text-anchor="'+anc+'" dominant-baseline="middle" fill="#ccc" font-size="7" font-family="monospace">'+pct+'%</text>';
     }
   });
   pieSvg+='</svg>';
-  // Legend
-  const legend = '<table style="border-collapse:collapse;width:100%">'+pieDataAll.map((d,i)=>
+  const legend='<table style="border-collapse:collapse;width:100%">'+pieDataAll.map(d=>
     '<tr>'
     +'<td style="width:10px;padding:.15rem .4rem .15rem 0"><span style="width:8px;height:8px;border-radius:50%;background:'+d.color+';display:inline-block"></span></td>'
     +'<td style="font-family:var(--ff-mono);font-size:.55rem;color:var(--mute);padding:.15rem .5rem .15rem 0;white-space:nowrap">'+esc(d.lbl)+'</td>'
     +'<td style="font-family:var(--ff-mono);font-size:.58rem;color:var(--grn);text-align:right;white-space:nowrap">'+d.n+'</td>'
     +'</tr>'
   ).join('')+'</table>';
-  const lostStatsEl=document.getElementById('lost-stats'); if(lostStatsEl) lostStatsEl.style.display='block';
-  lostStatsEl.innerHTML=
-    // Row 1: total / region / sector
-    '<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:1rem;margin-bottom:1rem">'
-    +'<div class="sc p" style="animation:none;opacity:1;transform:none"><div class="sc-glow"></div><span class="sc-ico">&#x274C;</span><div class="sc-num">'+deals.length+'</div><div class="sc-lbl">Lost Deals</div><div class="sc-sub">'+lostState.year+'</div></div>'
-    +'<div class="sc g" style="animation:none;opacity:1;transform:none"><div class="sc-glow"></div><span class="sc-ico">&#x1F310;</span><div class="sc-lbl" style="margin-bottom:.4rem">By Region</div>'+regionBreakdown+'</div>'
-    +'<div class="sc p" style="animation:none;opacity:1;transform:none"><div class="sc-glow"></div><span class="sc-ico">&#x1F3E2;</span><div class="sc-lbl" style="margin-bottom:.4rem">By Sector</div>'+sectorBreakdown+'</div>'
-    +'</div>'
-    // Row 2: legend (2 cols) + pie (1 col)
-    +'<div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin-bottom:1.5rem;align-items:stretch">'
-    +'<div class="sc g" style="animation:none;opacity:1;transform:none"><div class="sc-glow"></div><span class="sc-ico">&#x1F4CB;</span><div class="sc-lbl" style="margin-bottom:.5rem">By Reason</div>'
-    +legend
-    +'</div>'
-    +'<div class="sc p" style="animation:none;opacity:1;transform:none;display:flex;flex-direction:column;align-items:center;justify-content:center"><div class="sc-glow"></div>'+pieSvg+'</div>'
-    +'</div>';
-
-  const lyp=document.getElementById('lost-year-pills');
-  if(lyp) lyp.innerHTML=[2025,2026].map(function(y){ return '<button class="f-pill'+(lostState.year===y?' active':'')+'" onclick="setLostYear('+y+')">'+y+'</button>'; }).join('');
-  renderLostPills();
-  renderLostStagePills();
-  renderLostTable();
+  el.innerHTML=
+    '<div class="sc g" style="animation:none;opacity:1;transform:none"><div class="sc-glow"></div><span class="sc-ico">&#x1F4CB;</span><div class="sc-lbl" style="margin-bottom:.5rem">By Reason</div>'+legend+'</div>'
+    +'<div class="sc p" style="animation:none;opacity:1;transform:none;display:flex;flex-direction:column;align-items:center;justify-content:center"><div class="sc-glow"></div>'+pieSvg+'</div>';
 }
 
 function renderLostTable(){
@@ -1057,6 +1035,7 @@ function renderLostTable(){
   items.sort((a,b)=>new Date(b.lost_time)-new Date(a.lost_time));
   const countEl=document.getElementById('lost-filtered-count');
   if(countEl) countEl.textContent=items.length+' deal'+(items.length!==1?'s':'');
+  renderLostReasonChart(items);
 
   const tbl=document.getElementById('lost-tbl');
   if(!tbl) return;
@@ -2668,6 +2647,9 @@ async function init(){
   $('dive').style.display='none';
   $('upload-panel').style.display='none';
   S.diveKey=null; S.chartOffset=0; S.yearFilter=null; S.filterRegion=null; S.filterSector=null; S.filterOwner=null; S.filterSource=null; S.filterAttr=null; S.statsOffset=0;
+  S.openDeals=null;
+  salesState.loaded=false; salesState.customers=[]; salesState.dealMap={};
+  lostState.loaded=false; lostState.deals=null;
   const ownerSel=document.getElementById('owner-select');
   if(ownerSel) ownerSel.value='';
   const srcSel=document.getElementById('source-select');
