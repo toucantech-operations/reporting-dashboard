@@ -158,6 +158,14 @@
     .pc-item-meta{font-family:var(--ff-mono);font-size:.6rem;color:var(--mute);white-space:nowrap;margin-top:.1rem}
     .pc-empty{font-family:var(--ff-mono);font-size:.65rem;color:var(--mute);padding:.5rem;text-align:center}
     /* Sales mode */
+    .ms-wrap{position:relative;display:inline-block}
+    .ms-btn{font-family:var(--ff-mono);font-size:.65rem;background:var(--surf2);border:1px solid var(--bord2);color:var(--txt2);padding:.28rem .6rem;border-radius:8px;cursor:pointer;min-width:100px;text-align:left;white-space:nowrap}
+    .ms-btn.active{border-color:var(--pur);color:var(--pur)}
+    .ms-dropdown{display:none;position:absolute;top:calc(100% + 4px);left:0;z-index:100;background:var(--surf);border:1px solid var(--bord2);border-radius:8px;padding:.4rem;min-width:160px;box-shadow:0 8px 24px rgba(0,0,0,.3)}
+    .ms-dropdown.open{display:block}
+    .ms-option{display:flex;align-items:center;gap:.5rem;padding:.3rem .5rem;cursor:pointer;border-radius:5px;font-family:var(--ff-mono);font-size:.62rem;color:var(--txt2);transition:background .12s}
+    .ms-option:hover{background:var(--surf2)}
+    .ms-option input{accent-color:var(--pur);cursor:pointer}
     .sales-year-toggle{display:flex;gap:0;border:1px solid var(--bord2);border-radius:10px;overflow:hidden;margin-bottom:1.5rem}
     .sales-yr-btn{font-family:var(--ff-mono);font-size:.7rem;padding:.38rem 1.2rem;border:none;background:none;color:var(--mute);cursor:pointer;letter-spacing:.08em;transition:background .2s,color .2s}
     .sales-yr-btn.active{background:var(--grn-soft);color:var(--grn)}
@@ -793,7 +801,18 @@
           <div class="pill-divider"></div>
           <div style="display:flex;flex-direction:column;align-items:center;gap:.25rem;flex-shrink:0">
             <span class="pill-label">Stage Lost</span>
-            <div id="lost-stage-pills" class="pill-group"></div>
+            <div class="ms-wrap" id="lost-stage-wrap">
+              <button class="ms-btn" id="lost-stage-btn" onclick="toggleMsDropdown('lost-stage')">All stages ▾</button>
+              <div class="ms-dropdown" id="lost-stage-dropdown">
+                <label class="ms-option"><input type="checkbox" value="Qualified" onchange="updateLostStages()"> Qualified</label>
+                <label class="ms-option"><input type="checkbox" value="Demo Booked" onchange="updateLostStages()"> Demo Booked</label>
+                <label class="ms-option"><input type="checkbox" value="Demo Done" onchange="updateLostStages()"> Demo Done</label>
+                <label class="ms-option"><input type="checkbox" value="S Proposal" onchange="updateLostStages()"> S Proposal</label>
+                <label class="ms-option"><input type="checkbox" value="F Proposal" onchange="updateLostStages()"> F Proposal</label>
+                <label class="ms-option"><input type="checkbox" value="Negotiation" onchange="updateLostStages()"> Negotiation</label>
+                <label class="ms-option"><input type="checkbox" value="Awaiting Contract" onchange="updateLostStages()"> Awaiting Contract</label>
+              </div>
+            </div>
           </div>
           <div class="pill-divider"></div>
           <div style="display:flex;flex-direction:column;align-items:center;gap:.25rem;flex-shrink:0">
@@ -836,14 +855,30 @@ let starMode = false;
 const lostState = { year: 2026, deals: null, loaded: false };
 const lostStages = new Set(); // selected stages for multi-select
 
-function renderLostStagePills(){
-  const el = document.getElementById('lost-stage-pills');
-  if(!el) return;
-  el.innerHTML = STAGE_ORDER.map(id=>STAGE_MAP[id]).map(s=>{
-    const active = lostStages.has(s);
-    return '<button class="f-pill'+(active?' active':'')+'" data-lost-stage="'+s+'">'+s+'</button>';
-  }).join('');
+function toggleMsDropdown(id){
+  const dd = document.getElementById(id+'-dropdown');
+  if(dd) dd.classList.toggle('open');
 }
+// Close dropdown when clicking outside
+document.addEventListener('click', function(e){
+  if(!e.target.closest('.ms-wrap')){
+    document.querySelectorAll('.ms-dropdown.open').forEach(d=>d.classList.remove('open'));
+  }
+});
+function updateLostStages(){
+  lostStages.clear();
+  document.querySelectorAll('#lost-stage-dropdown input').forEach(cb=>cb.checked=false);
+  const lsBtn=document.getElementById('lost-stage-btn'); if(lsBtn){lsBtn.textContent='All stages ▾';lsBtn.classList.remove('active');}
+  document.querySelectorAll('#lost-stage-dropdown input:checked').forEach(cb=>lostStages.add(cb.value));
+  const btn=document.getElementById('lost-stage-btn');
+  if(btn){
+    const sel=[...lostStages];
+    btn.textContent=sel.length===0?'All stages ▾':sel.length===1?sel[0]+' ▾':sel.length+' stages ▾';
+    btn.classList.toggle('active',sel.length>0);
+  }
+  renderLostTable();
+}
+function renderLostStagePills(){ /* replaced by dropdown */ }
 const lostFilters = { region: null, sector: null };
 
 async function fetchLostDeals(yr){
@@ -893,8 +928,6 @@ function renderLostPills(){
 }
 
 document.addEventListener('click',function(e){
-  const ls=e.target.closest('[data-lost-stage]');
-  if(ls){ const s=ls.dataset.lostStage; if(lostStages.has(s)) lostStages.delete(s); else lostStages.add(s); renderLostStagePills(); renderLostTable(); return; }
   const rb=e.target.closest('[data-lost-region]');
   const sb=e.target.closest('[data-lost-sector]');
   if(rb){ lostFilters.region=lostFilters.region===rb.dataset.lostRegion?null:rb.dataset.lostRegion; renderLostPills(); renderLostTable(); }
