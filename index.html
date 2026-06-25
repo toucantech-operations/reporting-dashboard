@@ -763,20 +763,6 @@
           </div>
           <div class="pill-divider"></div>
           <div style="display:flex;flex-direction:column;align-items:center;gap:.25rem;flex-shrink:0">
-            <span class="pill-label">Stage</span>
-            <select class="owner-select" id="lost-stage-select" onchange="renderLostTable()" style="font-size:.58rem">
-              <option value="">All</option>
-              <option value="Qualified">Qualified</option>
-              <option value="Demo Booked">Demo Booked</option>
-              <option value="Demo Done">Demo Done</option>
-              <option value="S Proposal">S Proposal</option>
-              <option value="F Proposal">F Proposal</option>
-              <option value="Negotiation">Negotiation</option>
-              <option value="Awaiting Contract">Awaiting Contract</option>
-            </select>
-          </div>
-          <div class="pill-divider"></div>
-          <div style="display:flex;flex-direction:column;align-items:center;gap:.25rem;flex-shrink:0">
             <span class="pill-label">Source</span>
             <select class="owner-select" id="lost-source-select" onchange="renderLostTable()" style="font-size:.58rem">
               <option value="">All</option>
@@ -1067,7 +1053,6 @@ function renderLostTable(){
   if(fo) items=items.filter(d=>(d.owner_name||'').startsWith(fo));
   if(lostFilters.region) items=items.filter(d=>rg(d)===lostFilters.region);
   if(lostFilters.sector) items=items.filter(d=>sg(d)===lostFilters.sector);
-  if(fLostStage) items=items.filter(d=>stageName(d)===fLostStage);
   if(fSource) items=items.filter(d=>getAttr(d[ATTR_FIELD])===fSource);
   if(lostStages.size>0) items=items.filter(d=>lostStages.has(stageName(d)));
   if(fReason) items=items.filter(d=>(d.lost_reason||'').startsWith(fReason.split(' (')[0]));
