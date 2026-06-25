@@ -962,6 +962,7 @@ async function renderLost(){
       ['Too early/not ready','Too early/not ready'],
       ['Unresponsive','Unresponsive'],
     ];
+  const lostStatsEl=document.getElementById('lost-stats'); if(lostStatsEl) lostStatsEl.style.display='block';
   // Row 2: reason chart — initially rendered with all deals, updated by renderLostTable
   lostStatsEl.innerHTML +=
     '<div id="lost-reason-row" style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin-bottom:1.5rem;align-items:stretch"></div>';
