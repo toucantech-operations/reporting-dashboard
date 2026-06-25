@@ -35,7 +35,7 @@
     #atm span:nth-child(1){width:800px;height:800px;top:-260px;left:-180px;background:radial-gradient(circle,rgba(124,58,237,.13) 0%,transparent 68%)}
     #atm span:nth-child(2){width:600px;height:600px;bottom:-180px;right:-120px;background:radial-gradient(circle,rgba(31,222,158,.10) 0%,transparent 68%)}
     #atm span:nth-child(3){width:300px;height:300px;top:40%;left:50%;background:radial-gradient(circle,rgba(176,110,243,.06) 0%,transparent 70%)}
-    .wrap{position:relative;z-index:1;max-width:1600px;margin:0 auto;padding:2rem 1.25rem 5rem}
+    .wrap{position:relative;z-index:1;max-width:1400px;margin:0 auto;padding:2rem 2rem 5rem}
     .hdr{display:flex;align-items:flex-start;justify-content:space-between;gap:1.5rem;margin-bottom:2rem;padding-bottom:2rem;border-bottom:1px solid var(--bord);flex-wrap:wrap}
     .hdr-l h1{font-family:var(--ff-head);font-size:clamp(2.4rem,5vw,3.8rem);font-weight:900;letter-spacing:-.03em;line-height:1}
     .hdr-l h1 i{font-style:italic;color:var(--pur);font-weight:300}
@@ -793,16 +793,7 @@
           <div class="pill-divider"></div>
           <div style="display:flex;flex-direction:column;align-items:center;gap:.25rem;flex-shrink:0">
             <span class="pill-label">Stage Lost</span>
-            <select class="owner-select" id="lost-stage-select" onchange="renderLostTable()" style="font-size:.58rem">
-              <option value="">All</option>
-              <option value="Qualified">Qualified</option>
-              <option value="Demo Booked">Demo Booked</option>
-              <option value="Demo Done">Demo Done</option>
-              <option value="S Proposal">S Proposal</option>
-              <option value="F Proposal">F Proposal</option>
-              <option value="Negotiation">Negotiation</option>
-              <option value="Awaiting Contract">Awaiting Contract</option>
-            </select>
+            <div id="lost-stage-pills" class="pill-group"></div>
           </div>
           <div class="pill-divider"></div>
           <div style="display:flex;flex-direction:column;align-items:center;gap:.25rem;flex-shrink:0">
@@ -843,6 +834,16 @@ let starMode = false;
    LOST DEALS MODE
 ═══════════════════════════════════════ */
 const lostState = { year: 2026, deals: null, loaded: false };
+const lostStages = new Set(); // selected stages for multi-select
+
+function renderLostStagePills(){
+  const el = document.getElementById('lost-stage-pills');
+  if(!el) return;
+  el.innerHTML = STAGE_ORDER.map(id=>STAGE_MAP[id]).map(s=>{
+    const active = lostStages.has(s);
+    return '<button class="f-pill'+(active?' active':'')+'" data-lost-stage="'+s+'">'+s+'</button>';
+  }).join('');
+}
 const lostFilters = { region: null, sector: null };
 
 async function fetchLostDeals(yr){
@@ -892,6 +893,8 @@ function renderLostPills(){
 }
 
 document.addEventListener('click',function(e){
+  const ls=e.target.closest('[data-lost-stage]');
+  if(ls){ const s=ls.dataset.lostStage; if(lostStages.has(s)) lostStages.delete(s); else lostStages.add(s); renderLostStagePills(); renderLostTable(); return; }
   const rb=e.target.closest('[data-lost-region]');
   const sb=e.target.closest('[data-lost-sector]');
   if(rb){ lostFilters.region=lostFilters.region===rb.dataset.lostRegion?null:rb.dataset.lostRegion; renderLostPills(); renderLostTable(); }
@@ -1014,6 +1017,7 @@ async function renderLost(){
   const lyp=document.getElementById('lost-year-pills');
   if(lyp) lyp.innerHTML=[2025,2026].map(function(y){ return '<button class="f-pill'+(lostState.year===y?' active':'')+'" onclick="setLostYear('+y+')">'+y+'</button>'; }).join('');
   renderLostPills();
+  renderLostStagePills();
   renderLostTable();
 }
 
@@ -1022,7 +1026,7 @@ function renderLostTable(){
   const rg=d=>Object.keys(REGION_ID).find(r=>REGION_ID[r]===Number(d[REGION_FIELD]))||'--';
   const sg=d=>Object.keys(SECTOR_ID).find(s=>SECTOR_ID[s]===Number(d[SECTOR_FIELD]))||'--';
   const fo=document.getElementById('lost-owner-select')?.value||'';
-  const fLostStage=document.getElementById('lost-stage-select')?.value||'';
+
   const fSource=document.getElementById('lost-source-select')?.value||'';
   const fReason=document.getElementById('lost-reason-select')?.value||'';
 
@@ -1032,8 +1036,7 @@ function renderLostTable(){
   if(lostFilters.sector) items=items.filter(d=>sg(d)===lostFilters.sector);
   if(fLostStage) items=items.filter(d=>stageName(d)===fLostStage);
   if(fSource) items=items.filter(d=>getAttr(d[ATTR_FIELD])===fSource);
-  const fStage=document.getElementById('lost-stage-select')?.value||'';
-  if(fStage) items=items.filter(d=>stageName(d)===fStage);
+  if(lostStages.size>0) items=items.filter(d=>lostStages.has(stageName(d)));
   if(fReason) items=items.filter(d=>(d.lost_reason||'').startsWith(fReason.split(' (')[0]));
   items.sort((a,b)=>new Date(b.lost_time)-new Date(a.lost_time));
   const countEl=document.getElementById('lost-filtered-count');
@@ -2216,10 +2219,11 @@ function switchTab(tab){
 function renderDiveTbl(){
   const m=S.mo[S.diveKey]||{deals:[],leads:[],archivedL:[],conv:[]};
   if(S.diveTab==='deals'){
-    const items=applyDiveFilter([...m.deals],false,false).sort((a,b)=>new Date(b.add_time)-new Date(a.add_time));
-    if(!items.length){$('dive-tbl').innerHTML='<div class="empty">No new deals this month.</div>';return;}
+    let items=applyDiveFilter([...m.deals],false,false);
     const fStage=document.getElementById('dive-stage-select')?.value||'';
     if(fStage) items=items.filter(d=>stageName(d)===fStage);
+    items=items.sort((a,b)=>new Date(b.add_time)-new Date(a.add_time));
+    if(!items.length){$('dive-tbl').innerHTML='<div class="empty">No new deals this month.</div>';return;}
     const sortedDeals=sortItems(items);
     $('dive-tbl').innerHTML='<table style="table-layout:fixed;width:100%"><thead><tr>'
       +'<th class="cell-wrap">Title'+sortIcon('title')+'</th>'
