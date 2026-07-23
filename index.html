@@ -821,7 +821,7 @@
           </div>
         </div>
       </div>
-      <div class="tbl-wrap"><table id="lost-tbl"></table></div>
+      <div class="tbl-wrap" id="lost-tbl-wrap"><table id="lost-tbl"></table></div>
     </div>
   </div>
 
@@ -1070,9 +1070,9 @@ function renderLostTable(){
   if(countEl) countEl.textContent=items.length+' deal'+(items.length!==1?'s':'');
   renderLostReasonChart(items);
 
-  const tbl=document.getElementById('lost-tbl');
+  const tbl=document.getElementById('lost-tbl-wrap');
   if(!tbl) return;
-  if(!items.length){ tbl.innerHTML='<tr><td class="empty" colspan="9">No lost deals match these filters.</td></tr>'; return; }
+  if(!items.length){ tbl.innerHTML='<div class="empty">No lost deals match these filters.</div>'; return; }
   tbl.innerHTML='<table style="table-layout:fixed;width:100%"><thead><tr>'
     +'<th class="cell-wrap" style="width:17%">Title</th>'
     +'<th style="width:5%">Owner</th>'
@@ -1103,6 +1103,7 @@ function renderLostTable(){
    SALES MODE
 ═══════════════════════════════════════ */
 const AT_CUSTOMERS_TABLE = 'tblzv9kEKvCAhN451';
+const AT_FINOPS_TABLE = 'tblMtZzBFdFXkf7LT';
 const SALES_CUSTOMER_DATE_FIELD = 'Date they became a customer (based on first core licence start date)';
 const SALES_DEAL_ID_FIELD = 'Pipedrive deal ID';
 const SALES_NAME_FIELD = 'Customer name';
@@ -1143,6 +1144,98 @@ async function fetchCustomers(){
     dealId: r.fields[SALES_DEAL_ID_FIELD]||null,
     owner: r.fields[SALES_OWNER_FIELD]||'Other'
   })).filter(c=>c.date); // only records with a date
+}
+
+/* ── FinOps Metrics ARR fetch (Engine B, fixed FX) ── */
+const FX_FALLBACK = {GBP:1,USD:0.79,EUR:0.85,AUD:0.52,CAD:0.58};
+const ORDER_NEW = 'AA-001-A1';
+
+function fxRateForYear(fxRates, yr){
+  // Fixed mode: rate on/after Jan 1 of the year
+  const target = yr+'-01-01';
+  const dates = Object.keys(fxRates).sort();
+  const d = dates.find(d=>d>=target) || dates[dates.length-1];
+  return fxRates[d] || {};
+}
+
+function toGbp(ccy, dayRates){
+  if(!ccy||ccy==='GBP') return 1;
+  if(dayRates[ccy]) return 1/dayRates[ccy];
+  return FX_FALLBACK[ccy]||1;
+}
+
+function sc(v){ return Array.isArray(v)?v[0]:v; }
+
+async function fetchFxRates(){
+  try{
+    const today = new Date().toISOString().slice(0,10);
+    const r = await fetch('https://api.frankfurter.app/2014-01-01..'+today+'?from=GBP&to=USD,EUR,AUD,CAD');
+    if(!r.ok) return null;
+    const d = await r.json();
+    return d.rates||null;
+  }catch(e){ return null; }
+}
+
+async function fetchFinOpsRecords(){
+  let all=[], offset=null;
+  const fields = ['Type','AVE ARR (over duration of contract)','Billing Currency (from Customer Name)',
+    'Start date / Service date','Order Number','Pipedrive deal ID (from Customer Name)',
+    'Sales Region (from Customer Name)','Sector (from Customer Name)','Sub-type'];
+  const fieldQs = fields.map(f=>'&fields[]='+encodeURIComponent(f)).join('');
+  while(true){
+    const url = WORKER_URL+'/airtable/'+AT_BASE+'/'+AT_FINOPS_TABLE+'?pageSize=100'+fieldQs+(offset?'&offset='+encodeURIComponent(offset):'');
+    const r = await fetch(url);
+    if(!r.ok) break;
+    const d = await r.json();
+    all=all.concat(d.records||[]);
+    if(!d.offset) break;
+    offset=d.offset;
+  }
+  return all;
+}
+
+// Returns { dealId -> arrGbp } for the given year using Engine B
+async function computeFinOpsARR(yr){
+  // Check cache
+  if(salesState.finOpsARR && salesState.finOpsYear===yr) return salesState.finOpsARR;
+
+  const [records, fxAllRates] = await Promise.all([fetchFinOpsRecords(), fetchFxRates()]);
+  const dayRates = fxAllRates ? fxRateForYear(fxAllRates, yr) : {};
+
+  // Filter: only AA-001-A1 (new sale) Licence rows, exclude pro-bono
+  const newSaleRows = records.filter(r=>{
+    const f=r.fields;
+    if((sc(f['Sub-type'])||'').toLowerCase().includes('pro') && (sc(f['Sub-type'])||'').toLowerCase().includes('bono')) return false;
+    if(sc(f['Order Number'])!==ORDER_NEW) return false;
+    if(sc(f['Type'])!=='Licence') return false;
+    const start=sc(f['Start date / Service date']);
+    if(!start) return false;
+    return true;
+  });
+
+  // Group by Pipedrive deal ID
+  const byDeal = {};
+  for(const r of newSaleRows){
+    const f=r.fields;
+    const dealIds = Array.isArray(f['Pipedrive deal ID (from Customer Name)'])
+      ? f['Pipedrive deal ID (from Customer Name)']
+      : [f['Pipedrive deal ID (from Customer Name)']];
+    const start = sc(f['Start date / Service date']);
+    const nativeArr = Number(sc(f['AVE ARR (over duration of contract)']))||0;
+    const ccy = sc(f['Billing Currency (from Customer Name)'])||'GBP';
+    const arrGbp = nativeArr * toGbp(ccy, dayRates);
+    // Only count if start is in the selected year
+    if(!start||!start.startsWith(yr+'')) continue;
+    for(const did of dealIds){
+      if(!did) continue;
+      const key=String(did);
+      byDeal[key]=(byDeal[key]||0)+arrGbp;
+    }
+  }
+
+  salesState.finOpsARR = byDeal;
+  salesState.finOpsYear = yr;
+  return byDeal;
 }
 
 function setSalesYear(yr){
@@ -1205,6 +1298,9 @@ async function renderSales(){
           wonStart+=500;
         }
       }
+      // Fetch FinOps ARR
+      salesState.finOpsARR = await computeFinOpsARR(salesState.year);
+      salesState.finOpsYear = salesState.year;
       salesState.loaded = true;
     }catch(e){
       document.getElementById('sales-bars').innerHTML = '<div style="color:var(--red);font-family:var(--ff-mono);font-size:.7rem;margin:auto">Error loading customers: '+esc(e.message)+'</div>';
@@ -1224,7 +1320,7 @@ async function renderSales(){
   const validCustomers = yearCustomers.filter(c=>!isWiped(c.name) && !isRemoved(c.name));
   const _rg = d => d ? (Object.keys(REGION_ID).find(r=>REGION_ID[r]===Number(d[REGION_FIELD]))||'--') : '--';
   const _sg = d => d ? (Object.keys(SECTOR_ID).find(s=>SECTOR_ID[s]===Number(d[SECTOR_FIELD]))||'--') : '--';
-  const getARR = c => { const d=salesState.dealMap[String(c.dealId)]; return d&&d[ARR_FIELD] ? Number(d[ARR_FIELD]) : 0; };
+  const getARR = c => { const fo=salesState.finOpsARR&&salesState.finOpsARR[String(c.dealId)]; if(fo) return fo; const d=salesState.dealMap[String(c.dealId)]; return d&&d[ARR_FIELD]?Number(d[ARR_FIELD]):0; };
   const totalARR = validCustomers.reduce((s,c)=>s+getARR(c),0);
 
   function scBreakdown(items, groupFn, groups, color){
@@ -2681,7 +2777,7 @@ async function init(){
   $('upload-panel').style.display='none';
   S.diveKey=null; S.chartOffset=0; S.yearFilter=null; S.filterRegion=null; S.filterSector=null; S.filterOwner=null; S.filterSource=null; S.filterAttr=null; S.statsOffset=0;
   S.openDeals=null;
-  salesState.loaded=false; salesState.customers=[]; salesState.dealMap={};
+  salesState.loaded=false; salesState.customers=[]; salesState.dealMap={}; salesState.finOpsARR=null; salesState.finOpsYear=null;
   lostState.loaded=false; lostState.deals=null;
   const ownerSel=document.getElementById('owner-select');
   if(ownerSel) ownerSel.value='';
