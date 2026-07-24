@@ -1268,7 +1268,6 @@ async function renderSales(){
       {
         const WON_FIELDS = '&custom_fields[]='+REGION_FIELD
           +'&custom_fields[]='+SECTOR_FIELD
-          +'&custom_fields[]='+ARR_FIELD
           +'&custom_fields[]='+ATTR_FIELD
           +'&custom_fields[]='+SRC_DETAIL_FIELD
           +'&custom_fields[]=fe720b116bedc6ef911cd535d7957a09dbec355f'
@@ -1310,7 +1309,7 @@ async function renderSales(){
   const validCustomers = yearCustomers.filter(c=>!isWiped(c.name) && !isRemoved(c.name));
   const _rg = d => d ? (Object.keys(REGION_ID).find(r=>REGION_ID[r]===Number(d[REGION_FIELD]))||'--') : '--';
   const _sg = d => d ? (Object.keys(SECTOR_ID).find(s=>SECTOR_ID[s]===Number(d[SECTOR_FIELD]))||'--') : '--';
-  const getARR = c => { const fo=salesState.finOpsARR&&salesState.finOpsARR[String(c.dealId)]; if(fo) return fo; const d=salesState.dealMap[String(c.dealId)]; return d&&d[ARR_FIELD]?Number(d[ARR_FIELD]):0; };
+  const getARR = c => (salesState.finOpsARR&&salesState.finOpsARR[String(c.dealId)])||0;
   const totalARR = validCustomers.reduce((s,c)=>s+getARR(c),0);
 
   function scBreakdown(items, groupFn, groups, color){
@@ -1334,9 +1333,7 @@ async function renderSales(){
     +'<div class="sc g" style="animation:none;opacity:1;transform:none;background:var(--surf2)"><div class="sc-glow"></div><span class="sc-ico">&#x1F3E2;</span><div class="sc-lbl" style="margin-bottom:.5rem">By Sector</div>'+sectorBreakdown+'</div>';
 
   // Bar chart
-  const getMonthARR = (yr,mo) => getSalesForMonth(yr,mo).filter(c=>!isWiped(c.name)&&!isRemoved(c.name)).reduce((s,c)=>{
-    const d=salesState.dealMap[String(c.dealId)]; return s+(d&&d[ARR_FIELD]?Number(d[ARR_FIELD]):0);
-  },0);
+  const getMonthARR = (yr,mo) => getSalesForMonth(yr,mo).filter(c=>!isWiped(c.name)&&!isRemoved(c.name)).reduce((s,c)=>s+((salesState.finOpsARR&&salesState.finOpsARR[String(c.dealId)])||0),0);
   const monthlyARR = MONTHS.map((_,i)=>getMonthARR(yr,i+1));
   const monthlyCounts = MONTHS.map((_,i)=>getSalesForMonth(yr,i+1).filter(c=>!isWiped(c.name)&&!isRemoved(c.name)).length);
   const maxARR = Math.max(...monthlyARR, 1);
@@ -1371,7 +1368,7 @@ async function renderSales(){
       return '<tr style="cursor:pointer" onclick="openSalesDive(&quot;'+owner.replace(/"/g,'')+'&quot;)">'
         +'<td style="color:var(--grn);font-family:var(--ff-mono);font-size:.75rem;padding-left:.8rem">'+esc(owner.split(' ')[0])+'</td>'
         +'<td class="tdf">'+items.length+'</td>'
-        +'<td class="tdm" style="color:var(--grn)">'+(items.length?fmtARR(items.reduce((s,c2)=>s+(c2.dealId&&salesState.dealMap[String(c2.dealId)]&&salesState.dealMap[String(c2.dealId)][ARR_FIELD]?Number(salesState.dealMap[String(c2.dealId)][ARR_FIELD]):0),0)):'--')+'</td>'
+        +'<td class="tdm" style="color:var(--grn)">'+(items.length?fmtARR(items.reduce((s,c2)=>s+((salesState.finOpsARR&&salesState.finOpsARR[String(c2.dealId)])||0),0)):'--')+'</td>'
         +REGIONS.map(r=>'<td class="tdm">'+items.filter(c=>{const d=salesState.dealMap[String(c.dealId)];return rg(d)===r;}).length+'</td>').join('')
         +'<td class="tdm" style="border-left:2px solid var(--bord2)">'+items.filter(c=>{const d=salesState.dealMap[String(c.dealId)];return sg(d)==='Education';}).length+'</td>'
         +'<td class="tdm">'+items.filter(c=>{const d=salesState.dealMap[String(c.dealId)];return sg(d)==='Membership Associations';}).length+'</td>'
@@ -1416,7 +1413,7 @@ function openSalesDive(owner){
     const wiped = isWiped(c.name);
     const region = rg(d);
     const sector = sg(d);
-    const arr = d ? fmtARR(d[ARR_FIELD]) : '--';
+    const arr = fmtARR((salesState.finOpsARR&&salesState.finOpsARR[String(c.dealId)])||0);
     const ownerName = getCustomerOwner(c);
     const origin = d ? classifyDeal(d) : '--';
     const source = d ? getAttr(d[ATTR_FIELD]) : '--';
@@ -1491,7 +1488,7 @@ function renderSalesBreakdown(){
   if(prevBtn) prevBtn.disabled=mo<=1;
   if(nextBtn) nextBtn.disabled=mo>=12;
   const cl=document.getElementById('sales-breakdown-count');
-  const totalARR2=items.filter(c=>!isWiped(c.name)).reduce((s,c2)=>{const d=salesState.dealMap[String(c2.dealId)];return s+(d&&d[ARR_FIELD]?Number(d[ARR_FIELD]):0);},0);
+  const totalARR2=items.filter(c=>!isWiped(c.name)).reduce((s,c2)=>s+((salesState.finOpsARR&&salesState.finOpsARR[String(c2.dealId)])||0),0);
   if(cl) cl.textContent=items.length+' customer'+(items.length!==1?'s':'')+' · '+fmtARR(totalARR2);
   [2024,2025,2026].forEach(y=>{ const b=document.getElementById('sb-yr-'+y); if(b) b.classList.toggle('active',y===yr); });
   renderSalesBreakdownPills();
@@ -1506,7 +1503,7 @@ function renderSalesBreakdown(){
       +'<td class="tdm">'+esc(getCustomerOwner(c))+'</td>'
       +'<td class="tdm">'+esc(rg2(d))+'</td>'
       +'<td class="cell-wrap tdm">'+esc(sg2(d))+'</td>'
-      +'<td class="tdm">'+fmtARR(d&&d[ARR_FIELD]?Number(d[ARR_FIELD]):0)+'</td>'
+      +'<td class="tdm">'+fmtARR((salesState.finOpsARR&&salesState.finOpsARR[String(c.dealId)])||0)+'</td>'
       +(d&&!d._stub
         ?'<td class="cell-wrap tdm">'+esc(classifyDeal(d)).split('|').join('<br>')+'</td>'
          +'<td class="cell-wrap tdm">'+esc(getAttr(d[ATTR_FIELD]))+(getAttrDetail(d)?'<br><span style="color:var(--mute)">'+esc(getAttrDetail(d))+'</span>':'')+'</td>'
@@ -1683,7 +1680,6 @@ async function fetchDeals(){
     const d=await pd('/deals?limit=500&start='+start+'&status=all'
       +'&since_timestamp=2024-01-01%2000:00:00'
       +'&custom_fields[]='+LEAD_DATE_FIELD+'&custom_fields[]='+REGION_FIELD+'&custom_fields[]='+SECTOR_FIELD+'&custom_fields[]='+UTM_SOURCE+'&custom_fields[]='+UTM_MEDIUM+'&custom_fields[]='+UTM_CAMPAIGN+'&custom_fields[]='+ATTR_FIELD+'&custom_fields[]=fe720b116bedc6ef911cd535d7957a09dbec355f'+'&custom_fields[]=8e5548ae0219873e1d86c3ed13b06844793abe01'+'&custom_fields[]=24dd14a8da3bd4a5e75afdf6bd5b58ae22d4ff94'+'&custom_fields[]=dc1ff60a066bf368faf632ed3379bff02051e217'+'&custom_fields[]=9c321e8b32cf5748e74e45b285f4bc96f364243f'+'&custom_fields[]=2fe3213363eb616db230e76c78d20c28d772ae4a'+'&custom_fields[]=75a1a400a093a0f80f6eee330539ddc29da3e276'+'&custom_fields[]=bfedadd6c4e6c2e5af96384d7b5b2c4065737c69'
-      +'&custom_fields[]=dbccdb389c4165e1826d388769d98d02ebb22144'
       +'&include_fields=origin,channel_id');
     if(!d.success) throw new Error(d.error||'Deals fetch failed');
     all=all.concat((d.data||[]).filter(x=>
@@ -1721,7 +1717,7 @@ async function fetchOpenDeals(){
       +'&custom_fields[]=2fe3213363eb616db230e76c78d20c28d772ae4a'
       +'&custom_fields[]=75a1a400a093a0f80f6eee330539ddc29da3e276'
       +'&custom_fields[]='+SRC_DETAIL_FIELD
-      +'&custom_fields[]='+ARR_FIELD);
+);
     if(!d.success) throw new Error(d.error||'Open deals fetch failed');
     all=all.concat((d.data||[]).filter(x=>x.pipeline_id !== EXCLUDED_PIPELINE));
     if(!d.additional_data?.pagination?.more_items_in_collection) break;
