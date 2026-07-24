@@ -1142,21 +1142,14 @@ async function fetchCustomers(){
     name: r.fields[SALES_NAME_FIELD]||'',
     date: r.fields[SALES_CUSTOMER_DATE_FIELD]||null,
     dealId: r.fields[SALES_DEAL_ID_FIELD]||null,
-    owner: r.fields[SALES_OWNER_FIELD]||'Other'
+    owner: r.fields[SALES_OWNER_FIELD]||'Other',
+    custRecordId: r.id||null
   })).filter(c=>c.date); // only records with a date
 }
 
 /* ── FinOps Metrics ARR fetch (Engine B, fixed FX) ── */
 const FX_FALLBACK = {GBP:1,USD:0.79,EUR:0.85,AUD:0.52,CAD:0.58};
 const ORDER_NEW = 'AA-001-A1';
-
-function fxRateForYear(fxRates, yr){
-  // Fixed mode: rate on/after Jan 1 of the year
-  const target = yr+'-01-01';
-  const dates = Object.keys(fxRates).sort();
-  const d = dates.find(d=>d>=target) || dates[dates.length-1];
-  return fxRates[d] || {};
-}
 
 function toGbp(ccy, dayRates){
   if(!ccy||ccy==='GBP') return 1;
@@ -1166,20 +1159,13 @@ function toGbp(ccy, dayRates){
 
 function sc(v){ return Array.isArray(v)?v[0]:v; }
 
-async function fetchFxRates(){
-  try{
-    const today = new Date().toISOString().slice(0,10);
-    const r = await fetch('https://api.frankfurter.app/2014-01-01..'+today+'?from=GBP&to=USD,EUR,AUD,CAD');
-    if(!r.ok) return null;
-    const d = await r.json();
-    return d.rates||null;
-  }catch(e){ return null; }
-}
+// FX handled via Airtable stored rate field
 
 async function fetchFinOpsRecords(){
   let all=[], offset=null;
   const fields = ['Type','AVE ARR (over duration of contract)','Billing Currency (from Customer Name)',
-    'Start date / Service date','Order Number','Pipedrive deal ID (from Customer Name)',
+    'Start date / Service date','Order Number','Customers',
+    'FX rate (from FinOps|Currencies) (from Customers)',
     'Sales Region (from Customer Name)','Sector (from Customer Name)','Sub-type'];
   const fieldQs = fields.map(f=>'&fields[]='+encodeURIComponent(f)).join('');
   while(true){
@@ -1199,8 +1185,7 @@ async function computeFinOpsARR(yr){
   // Check cache
   if(salesState.finOpsARR && salesState.finOpsYear===yr) return salesState.finOpsARR;
 
-  const [records, fxAllRates] = await Promise.all([fetchFinOpsRecords(), fetchFxRates()]);
-  const dayRates = fxAllRates ? fxRateForYear(fxAllRates, yr) : {};
+  const records = await fetchFinOpsRecords();
 
   // Filter: only AA-001-A1 (new sale) Licence rows, exclude pro-bono
   const newSaleRows = records.filter(r=>{
@@ -1213,23 +1198,28 @@ async function computeFinOpsARR(yr){
     return true;
   });
 
-  // Group by Pipedrive deal ID
+  // Build custRecordId -> dealId map from existing salesState.customers
+  const custToDeal = {};
+  (salesState.customers||[]).forEach(cu=>{
+    if(cu.dealId && cu.custRecordId) custToDeal[cu.custRecordId]=String(cu.dealId);
+  });
+
+  // Group by deal ID via Customers link field -> custToDeal map
   const byDeal = {};
   for(const r of newSaleRows){
     const f=r.fields;
-    const dealIds = Array.isArray(f['Pipedrive deal ID (from Customer Name)'])
-      ? f['Pipedrive deal ID (from Customer Name)']
-      : [f['Pipedrive deal ID (from Customer Name)']];
+    const custIds = Array.isArray(f['Customers']) ? f['Customers'] : (f['Customers']?[f['Customers']]:[]);
     const start = sc(f['Start date / Service date']);
     const nativeArr = Number(sc(f['AVE ARR (over duration of contract)']))||0;
+    const storedRate = Number(sc(f['FX rate (from FinOps|Currencies) (from Customers)']))||0;
     const ccy = sc(f['Billing Currency (from Customer Name)'])||'GBP';
-    const arrGbp = nativeArr * toGbp(ccy, dayRates);
-    // Only count if start is in the selected year
+    // Use stored Airtable FX rate (native × rate = GBP), fallback to FX_FALLBACK
+    const arrGbp = storedRate ? nativeArr * storedRate : nativeArr * (FX_FALLBACK[ccy]||1);
     if(!start||!start.startsWith(yr+'')) continue;
-    for(const did of dealIds){
-      if(!did) continue;
-      const key=String(did);
-      byDeal[key]=(byDeal[key]||0)+arrGbp;
+    for(const custId of custIds){
+      const dealId = custToDeal[custId];
+      if(!dealId) continue;
+      byDeal[dealId]=(byDeal[dealId]||0)+arrGbp;
     }
   }
 
