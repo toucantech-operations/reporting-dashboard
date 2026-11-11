@@ -62,6 +62,7 @@
     body.tt .sc.g:hover{border-color:rgba(255,104,29,.45)}
     body.tt .b,body.tt .sales-b{box-shadow:none}
     body.tt .b{background:linear-gradient(to top,#0a4976,#06bfff)}
+    body.tt .bg.m-even .b{background:linear-gradient(to top,#ff681d,#ffe001)}
     body.tt .warn-bar{background:rgba(255,224,1,.18);border-color:rgba(255,224,1,.7)}
     body.tt .warn-text{color:#0a4976}
     body.tt .info-bar{background:var(--pur-soft);border-color:rgba(0,110,201,.25)}
@@ -465,6 +466,8 @@
       <div class="tbl-wrap"><table id="ov-tbl"></table></div>
     </div>
 
+    <div id="src-ytd" class="src-section"></div>
+
     <div class="dive" id="dive">
       <div class="dive-hd">
         <div style="display:flex;align-items:center;gap:.75rem">
@@ -556,6 +559,8 @@
       </div>
       <div class="tbl-wrap dive-tbl-wrap" id="dive-tbl"></div>
     </div>
+
+    <div id="src-month" class="src-section" style="display:none"></div>
   </div>
 
   <div id="pipeline-view" style="display:none">
@@ -2012,7 +2017,7 @@ function renderChart(){
   $('bars').innerHTML=keys.map(k=>{
     const m=S.mo[k]||{deals:[],leads:[],archivedL:[],conv:[],opps:0};
     const h=Math.max(3,Math.round(m.opps/globalMax*mxH));
-    const sel=S.diveKey===k?'sel':'';
+    const sel=(S.diveKey===k?'sel':'')+((+k.split('-')[1])%2===0?' m-even':' m-odd');
     const tl=m.leads.length+m.archivedL.length+m.conv.length;
     const tip=m.opps+' opp'+(m.opps!==1?'s':'')+' ('+m.deals.length+' deal'+(m.deals.length!==1?'s':'')+' + '+tl+' lead'+(tl!==1?'s':'')+')';
     return '<div class="bg '+sel+'" onclick="openDive(\''+k+'\')"><div class="bw"><div class="b" style="height:'+h+'px"><div class="tip">'+tip+'</div></div></div><div class="blbl">'+mShort(k)+'</div></div>';
@@ -2257,6 +2262,7 @@ function renderOvTable(){
 
   html+='</tbody>';
   $('ov-tbl').innerHTML=html;
+  renderYtdSourceWidgets();
 }
 
 
@@ -2414,44 +2420,19 @@ function openDive(k){
   const dv=$('dive'); dv.style.display='block';
   setTimeout(()=>dv.scrollIntoView({behavior:'smooth',block:'start'}),40);
 }
-function closeDive(){ S.diveKey=null; $('dive').style.display='none'; diveFilters.owner=null; diveFilters.region=null; diveFilters.sector=null; diveFilters.source=null; diveFilters.attr=null; const dos=$('dive-owner-select'); if(dos) dos.value=''; const dss=$('dive-source-select'); if(dss) dss.value=''; const das=$('dive-attr-select'); if(das) das.value=''; renderChart(); }
+function closeDive(){ S.diveKey=null; $('dive').style.display='none'; diveFilters.owner=null; diveFilters.region=null; diveFilters.sector=null; diveFilters.source=null; diveFilters.attr=null; const dos=$('dive-owner-select'); if(dos) dos.value=''; const dss=$('dive-source-select'); if(dss) dss.value=''; const das=$('dive-attr-select'); if(das) das.value=''; renderChart(); renderMonthSourceWidgets(); }
 function switchTab(tab){
   S.diveTab=tab;
   ['deals','leads'].forEach(t=>$('t-'+t).classList.toggle('on',t===tab));
   renderDiveTbl();
 }
-function renderDiveTbl(){
-  const m=S.mo[S.diveKey]||{deals:[],leads:[],archivedL:[],conv:[]};
-  if(S.diveTab==='deals'){
-    let items=applyDiveFilter([...m.deals],false,false);
-    const fStage=document.getElementById('dive-stage-select')?.value||'';
-    if(fStage) items=items.filter(d=>stageName(d)===fStage);
-    items=items.sort((a,b)=>new Date(b.add_time)-new Date(a.add_time));
-    if(!items.length){$('dive-tbl').innerHTML='<div class="empty">No new deals this month.</div>';return;}
-    const sortedDeals=sortItems(items);
-    $('dive-tbl').innerHTML='<table style="table-layout:fixed;width:100%"><thead><tr>'
-      +'<th class="cell-wrap">Title'+sortIcon('title')+'</th>'
-      +'<th>Owner'+sortIcon('owner')+'</th>'
-      +'<th>Region'+sortIcon('region')+'</th>'
-      +'<th class="cell-wrap">Sector'+sortIcon('sector')+'</th>'
-      +'<th class="cell-wrap">Origin'+sortIcon('origin')+'</th>'
-      +'<th class="cell-wrap">Source'+sortIcon('source')+'</th>'
-      +'<th class="cell-wrap">Source Detail</th>'
-      +'<th>Status'+sortIcon('status')+'</th>'
-      +'<th>Created'+sortIcon('date')+'</th>'
-      +'</tr></thead><tbody>'
-      +sortedDeals.map(d=>'<tr>'
-        +'<td class="cell-wrap"><a href="https://toucantech.pipedrive.com/deal/'+d.id+'" target="_blank" style="color:var(--pur);text-decoration:none" onmouseover="this.style.textDecoration=\'underline\'" onmouseout="this.style.textDecoration=\'none\'">'+esc(d.title)+'</a></td>'
-        +'<td class="tdm">'+esc(d.owner_name||'--')+'</td>'
-        +'<td class="tdm">'+esc(Object.keys(REGION_ID).find(r=>REGION_ID[r]===Number(d[REGION_FIELD]))||'--')+'</td>'
-        +'<td class="cell-wrap tdm">'+esc(Object.keys(SECTOR_ID).find(s=>SECTOR_ID[s]===Number(d[SECTOR_FIELD]))||'--')+'</td>'
-        +'<td class="cell-wrap tdm">'+classifyDeal(d).split('|').map(esc).join('<br>')+'</td>'
-        +'<td class="cell-wrap tdm">'+esc(getAttr(d[ATTR_FIELD]))+(getAttrDetail(d)?'<br><span style="color:var(--mute)">'+esc(getAttrDetail(d))+'</span>':'')+'</td>'
-        +'<td class="cell-wrap tdm">'+esc(d[SRC_DETAIL_FIELD]||'--')+'</td>'
-        +'<td class="cell-wrap">'+dealStatusHtml(d)+'</td>'
-        +'<td class="tdm">'+fmtD(d.add_time)+'</td>'
-        +'</tr>').join('')+'</tbody></table>';
-  } else {
+function getDiveDealItems(m){
+  let items=applyDiveFilter([...m.deals],false,false);
+  const fStage=document.getElementById('dive-stage-select')?.value||'';
+  if(fStage) items=items.filter(d=>stageName(d)===fStage);
+  return items;
+}
+function getDiveLeadItems(m){
     const rawItems=[
       ...m.leads.map(l=>({
         title:l.title,
@@ -2493,14 +2474,207 @@ function renderDiveTbl(){
         url:'https://toucantech.pipedrive.com/deal/'+d.id
       })),
     ];
-    const items=rawItems.filter(function(item){
+    return rawItems.filter(function(item){
       if(diveFilters.owner){ var nm=item.owner||''; if(diveFilters.owner==='Other'){ if(Object.values(OWNER_MAP).some(function(o){return nm.startsWith(o.name.split(' ')[0]);})) return false; } else if(!nm.startsWith(diveFilters.owner)) return false; }
       if(diveFilters.region && item.region!==diveFilters.region) return false;
       if(diveFilters.sector && item.sector!==diveFilters.sector) return false;
       if(diveFilters.source && !item.source.startsWith(diveFilters.source)) return false;
       if(diveFilters.attr && (item.attr||'--')!==diveFilters.attr) return false;
       return true;
-    }).sort((a,b)=>new Date(b.date)-new Date(a.date));
+  });
+}
+
+
+/* ═══════════════════════════════════════
+   SOURCE BREAKDOWN WIDGETS (New Opportunities)
+   - Year to date (follows the monthly table filters)
+   - Selected month (follows the deep-dive filters), shown under the dive
+   Leads + deals merged by default; pills switch to leads-only / deals-only.
+═══════════════════════════════════════ */
+const srcState = { mode: 'all' };
+
+function sourceCategories(){
+  return [...new Set(Object.values(ATTR_MAP))].sort(function(a,b){ return a.localeCompare(b); }).concat(['Unknown']);
+}
+function srcLabel(v){
+  if(!v || v==='--') return 'Unknown';
+  const cats=sourceCategories();
+  if(cats.indexOf(v)>-1) return v;
+  const low=String(v).trim().toLowerCase();
+  const hit=cats.find(function(x){ return x.toLowerCase()===low; });
+  return hit||'Unknown';
+}
+function breakdownPalette(){
+  return currentTheme()==='tt'
+    ? ['#006ec9','#ff681d','#06bfff','#0a4976','#ffe001','#7fb6e4','#ffb184','#9bdcf7','#4d8fc0','#c9a800','#d94f0a','#0488b8','#b8d4ec','#ffd1b8','#fff08a','#2f8fd8','#ff9a5c','#1b6a9c','#ffc94d','#333333','#5a6a7a','#3a4a5a','#e6a817','#8fc5ee']
+    : ['#7c3aed','#1fde9e','#f8c247','#e05c5c','#38bdf8','#a78bfa','#34d399','#fb923c','#f472b6','#60a5fa','#4ade80','#c084fc','#2dd4bf','#facc15','#f87171','#818cf8','#a3e635','#fb7185','#22d3ee','#e879f9','#fbbf24','#86efac','#fdba74','#67e8f9'];
+}
+function breakdownColor(label){
+  if(label==='Unknown') return currentTheme()==='tt' ? '#8a97a5' : '#64748b';
+  const pal=breakdownPalette();
+  const i=sourceCategories().indexOf(label);
+  return pal[(i<0?0:i)%pal.length];
+}
+
+function ytdSourceItems(){
+  const yr=S.yearFilter||String(new Date().getFullYear());
+  const out={yr:yr,deals:[],leads:[]};
+  (S.allKeys||[]).forEach(function(k){
+    if(mYear(k)!==yr || EXCLUDED_MONTHS.has(k)) return;
+    const m=S.mo[k]||{deals:[],leads:[],archivedL:[],conv:[]};
+    applyFilter(m.deals).forEach(function(d){ out.deals.push(srcLabel(getAttr(d[ATTR_FIELD]))); });
+    applyFilter(m.leads).forEach(function(l){ out.leads.push(srcLabel(getAttr(l[ATTR_FIELD]))); });
+    applyFilter(m.conv).forEach(function(d){ out.leads.push(srcLabel(getAttr(d[ATTR_FIELD]))); });
+    applyFilter(m.archivedL,true).forEach(function(l){ out.leads.push(srcLabel(l.sourceChannelAttr)); });
+  });
+  return out;
+}
+function monthSourceItems(){
+  const k=S.diveKey; if(!k) return null;
+  const m=S.mo[k]||{deals:[],leads:[],archivedL:[],conv:[]};
+  return {
+    deals:getDiveDealItems(m).map(function(d){ return srcLabel(getAttr(d[ATTR_FIELD])); }),
+    leads:getDiveLeadItems(m).map(function(i){ return srcLabel(i.attr); })
+  };
+}
+
+function buildSourcePie(rows,total){
+  let svg='<svg viewBox="0 0 260 140" style="width:100%;height:100%;display:block">';
+  let angle=-Math.PI/2;
+  const cx=130,cy=70,r=45,rOuter=52,rLabel=68;
+  rows.forEach(function(d){
+    const slice=(d.n/total)*2*Math.PI, mid=angle+slice/2;
+    const x1=cx+r*Math.cos(angle), y1=cy+r*Math.sin(angle);
+    angle+=slice;
+    const x2=cx+r*Math.cos(angle), y2=cy+r*Math.sin(angle);
+    const large=slice>Math.PI?1:0;
+    if(rows.length===1){
+      svg+='<circle cx="'+cx+'" cy="'+cy+'" r="'+r+'" fill="'+d.color+'" style="stroke:var(--surf)" stroke-width="1.2"><title>'+esc(d.lbl)+': '+d.n+'</title></circle>';
+    } else {
+      svg+='<path d="M'+cx+','+cy+' L'+x1+','+y1+' A'+r+','+r+' 0 '+large+',1 '+x2+','+y2+' Z" fill="'+d.color+'" style="stroke:var(--surf)" stroke-width="1.2"><title>'+esc(d.lbl)+': '+d.n+'</title></path>';
+    }
+    if(slice>=0.25){
+      const pct=Math.round(d.n/total*100);
+      const iX=cx+(r+3)*Math.cos(mid), iY=cy+(r+3)*Math.sin(mid);
+      const mX=cx+rOuter*Math.cos(mid), mY=cy+rOuter*Math.sin(mid);
+      const oX=cx+rLabel*Math.cos(mid), oY=cy+rLabel*Math.sin(mid);
+      const anc=oX>cx?'start':'end';
+      svg+='<line x1="'+iX+'" y1="'+iY+'" x2="'+mX+'" y2="'+mY+'" stroke="'+d.color+'" stroke-width="1" opacity="0.7"/>';
+      svg+='<line x1="'+mX+'" y1="'+mY+'" x2="'+oX+'" y2="'+oY+'" stroke="'+d.color+'" stroke-width="1" opacity="0.7"/>';
+      svg+='<text x="'+(oX+(oX>cx?3:-3))+'" y="'+oY+'" text-anchor="'+anc+'" dominant-baseline="middle" style="fill:var(--txt2);font-family:var(--ff-mono)" font-size="7">'+pct+'%</text>';
+    }
+  });
+  return svg+'</svg>';
+}
+
+function renderSourceSection(host,heading,items){
+  if(!host) return;
+  const mode=srcState.mode;
+  const labels = mode==='deals' ? items.deals : mode==='leads' ? items.leads : items.deals.concat(items.leads);
+  const counts={};
+  labels.forEach(function(l){ counts[l]=(counts[l]||0)+1; });
+  const total=labels.length;
+  const rows=Object.keys(counts).map(function(l){ return {lbl:l,n:counts[l],color:breakdownColor(l)}; })
+    .sort(function(a,b){ return b.n-a.n || a.lbl.localeCompare(b.lbl); });
+
+  const pills=[['all','All'],['leads','Leads'],['deals','Deals']].map(function(x){
+    return '<button class="f-pill'+(mode===x[0]?' active':'')+'" data-src-mode="'+x[0]+'">'+x[1]+'</button>';
+  }).join('');
+
+  const rowHtml=function(d){
+    const pct=total?Math.round(d.n/total*100):0;
+    return '<tr>'
+      +'<td style="width:10px;padding:.2rem .5rem .2rem 0"><span style="width:9px;height:9px;border-radius:50%;background:'+d.color+';display:inline-block"></span></td>'
+      +'<td style="font-family:var(--ff-mono);font-size:.65rem;color:var(--mute);padding:.2rem .6rem .2rem 0;white-space:nowrap">'+esc(d.lbl)+'</td>'
+      +'<td style="font-family:var(--ff-mono);font-size:.68rem;color:var(--grn);text-align:right;white-space:nowrap;font-weight:600">'+d.n+'</td>'
+      +'<td style="font-family:var(--ff-mono);font-size:.58rem;color:var(--mute);text-align:right;padding-left:.5rem;white-space:nowrap">'+pct+'%</td>'
+      +'</tr>';
+  };
+  let legend;
+  if(!rows.length){
+    legend='<div style="font-family:var(--ff-mono);font-size:.68rem;color:var(--mute);padding:.5rem 0">Nothing to show for this selection.</div>';
+  } else if(rows.length>9){
+    const half=Math.ceil(rows.length/2);
+    legend='<div style="display:grid;grid-template-columns:1fr 1fr;gap:0 1.5rem">'
+      +'<table style="border-collapse:collapse;width:100%">'+rows.slice(0,half).map(rowHtml).join('')+'</table>'
+      +'<table style="border-collapse:collapse;width:100%">'+rows.slice(half).map(rowHtml).join('')+'</table></div>';
+  } else {
+    legend='<table style="border-collapse:collapse;width:100%">'+rows.map(rowHtml).join('')+'</table>';
+  }
+  const pie=rows.length ? buildSourcePie(rows,total) : '';
+
+  host.innerHTML=
+    '<div style="display:flex;align-items:center;justify-content:space-between;gap:.75rem;flex-wrap:wrap;margin-bottom:.75rem">'
+      +'<div class="sec-lbl" style="margin-bottom:0;flex:1;min-width:220px">'+esc(heading)+'</div>'
+      +'<div style="display:flex;align-items:center;gap:.75rem">'
+        +'<span style="font-family:var(--ff-mono);font-size:.7rem;color:var(--grn);font-weight:700">'+total+' total</span>'
+        +'<div class="pill-group">'+pills+'</div>'
+      +'</div>'
+    +'</div>'
+    +'<div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin-bottom:1.5rem;align-items:stretch">'
+      +'<div class="sc g" style="animation:none;opacity:1;transform:none"><div class="sc-glow"></div><span class="sc-ico">&#x1F4CB;</span><div class="sc-lbl" style="margin-bottom:.5rem">By Source</div>'+legend+'</div>'
+      +'<div class="sc p" style="animation:none;opacity:1;transform:none;display:flex;flex-direction:column;align-items:center;justify-content:center"><div class="sc-glow"></div>'+pie+'</div>'
+    +'</div>';
+}
+
+function renderYtdSourceWidgets(){
+  const host=document.getElementById('src-ytd');
+  if(!host || !S.allKeys || !S.allKeys.length) return;
+  const items=ytdSourceItems();
+  const cur=String(new Date().getFullYear());
+  renderSourceSection(host,'source breakdown \u2014 '+items.yr+(items.yr===cur?' year to date':''),items);
+}
+function renderMonthSourceWidgets(){
+  const host=document.getElementById('src-month');
+  if(!host) return;
+  const items=monthSourceItems();
+  if(!items){ host.style.display='none'; host.innerHTML=''; return; }
+  const p=mParts(S.diveKey);
+  host.style.display='block';
+  renderSourceSection(host,'source breakdown \u2014 '+p.mon+' '+p.y,items);
+}
+
+// Leads / deals / all toggle (shared by both sections)
+document.addEventListener('click',function(e){
+  const b=e.target.closest('[data-src-mode]');
+  if(!b) return;
+  srcState.mode=b.dataset.srcMode;
+  renderYtdSourceWidgets();
+  renderMonthSourceWidgets();
+});
+
+function renderDiveTbl(){
+  const m=S.mo[S.diveKey]||{deals:[],leads:[],archivedL:[],conv:[]};
+  renderMonthSourceWidgets();
+  if(S.diveTab==='deals'){
+    let items=getDiveDealItems(m);
+    items=items.sort((a,b)=>new Date(b.add_time)-new Date(a.add_time));
+    if(!items.length){$('dive-tbl').innerHTML='<div class="empty">No new deals this month.</div>';return;}
+    const sortedDeals=sortItems(items);
+    $('dive-tbl').innerHTML='<table style="table-layout:fixed;width:100%"><thead><tr>'
+      +'<th class="cell-wrap">Title'+sortIcon('title')+'</th>'
+      +'<th>Owner'+sortIcon('owner')+'</th>'
+      +'<th>Region'+sortIcon('region')+'</th>'
+      +'<th class="cell-wrap">Sector'+sortIcon('sector')+'</th>'
+      +'<th class="cell-wrap">Origin'+sortIcon('origin')+'</th>'
+      +'<th class="cell-wrap">Source'+sortIcon('source')+'</th>'
+      +'<th class="cell-wrap">Source Detail</th>'
+      +'<th>Status'+sortIcon('status')+'</th>'
+      +'<th>Created'+sortIcon('date')+'</th>'
+      +'</tr></thead><tbody>'
+      +sortedDeals.map(d=>'<tr>'
+        +'<td class="cell-wrap"><a href="https://toucantech.pipedrive.com/deal/'+d.id+'" target="_blank" style="color:var(--pur);text-decoration:none" onmouseover="this.style.textDecoration=\'underline\'" onmouseout="this.style.textDecoration=\'none\'">'+esc(d.title)+'</a></td>'
+        +'<td class="tdm">'+esc(d.owner_name||'--')+'</td>'
+        +'<td class="tdm">'+esc(Object.keys(REGION_ID).find(r=>REGION_ID[r]===Number(d[REGION_FIELD]))||'--')+'</td>'
+        +'<td class="cell-wrap tdm">'+esc(Object.keys(SECTOR_ID).find(s=>SECTOR_ID[s]===Number(d[SECTOR_FIELD]))||'--')+'</td>'
+        +'<td class="cell-wrap tdm">'+classifyDeal(d).split('|').map(esc).join('<br>')+'</td>'
+        +'<td class="cell-wrap tdm">'+esc(getAttr(d[ATTR_FIELD]))+(getAttrDetail(d)?'<br><span style="color:var(--mute)">'+esc(getAttrDetail(d))+'</span>':'')+'</td>'
+        +'<td class="cell-wrap tdm">'+esc(d[SRC_DETAIL_FIELD]||'--')+'</td>'
+        +'<td class="cell-wrap">'+dealStatusHtml(d)+'</td>'
+        +'<td class="tdm">'+fmtD(d.add_time)+'</td>'
+        +'</tr>').join('')+'</tbody></table>';
+  } else {
+    const items=getDiveLeadItems(m).sort((a,b)=>new Date(b.date)-new Date(a.date));
     if(!items.length){$('dive-tbl').innerHTML='<div class="empty">No leads this month.</div>';return;}
     const sortedLeads=sortItems(items);
     $('dive-tbl').innerHTML='<table style="table-layout:fixed;width:100%"><thead><tr>'
@@ -2590,6 +2764,7 @@ function setTheme(t){
   // pie chart colours depend on the theme
   const lv=document.getElementById('lost-view');
   if(lv && lv.style.display!=='none' && lostState.loaded) renderLostTable();
+  try{ renderYtdSourceWidgets(); renderMonthSourceWidgets(); }catch(e){}
 }
 function lostPieColors(){
   return currentTheme()==='tt'
