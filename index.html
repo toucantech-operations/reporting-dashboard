@@ -442,6 +442,8 @@
             </select>
           </div>
           <div class="pill-divider"></div>
+<div style="display:flex;flex-direction:column;align-items:center;gap:.25rem;flex-shrink:0"><span class="pill-label">Type</span><select class="owner-select" id="type-select" onchange="setType(this.value)" style="width:92px"><option value="">All</option><option value="Inbound">&#x1F9F2; Inbound</option><option value="Outbound">&#x1F4E4; Outbound</option><option value="Event">&#x1F3A4; Event</option><option value="Unclassified">&#x2753; Unclassified</option></select></div>
+<div class="pill-divider"></div>
           <div style="display:flex;flex-direction:column;align-items:center;gap:.25rem;flex-shrink:0">
             <span class="pill-label">Source</span>
             <select class="owner-select" id="attr-select" onchange="setAttr(this.value)">
@@ -521,6 +523,8 @@
           </select>
         </div>
         <div class="pill-divider"></div>
+<div style="display:flex;flex-direction:column;align-items:center;gap:.3rem"><span class="pill-label">Type</span><select class="owner-select" id="dive-type-select" onchange="setDiveType(this.value)" style="width:92px"><option value="">All</option><option value="Inbound">&#x1F9F2; Inbound</option><option value="Outbound">&#x1F4E4; Outbound</option><option value="Event">&#x1F3A4; Event</option><option value="Unclassified">&#x2753; Unclassified</option></select></div>
+<div class="pill-divider"></div>
         <div style="display:flex;flex-direction:column;align-items:center;gap:.3rem">
           <span class="pill-label">Source</span>
           <select class="owner-select" id="dive-attr-select" onchange="setDiveAttr(this.value)">
@@ -580,6 +584,11 @@
         <span class="pill-label">Sector</span>
         <div id="pl-top-sector-pills" class="pill-group"></div>
       </div>
+      <div class="pill-divider"></div>
+      <div style="display:flex;flex-direction:column;align-items:center;gap:.25rem;flex-shrink:0">
+        <span class="pill-label">Type</span>
+        <select class="owner-select" id="pl-top-type-select" onchange="setPlType(this.value)" style="width:92px"><option value="">All</option><option value="Inbound">&#x1F9F2; Inbound</option><option value="Outbound">&#x1F4E4; Outbound</option><option value="Event">&#x1F3A4; Event</option><option value="Unclassified">&#x2753; Unclassified</option></select>
+      </div>
     </div>
     <div class="pipeline-totals" id="pipeline-totals"></div>
     <div id="pl-src-all" class="src-section" data-src-ctx="pl-all"></div>
@@ -636,6 +645,8 @@
             </select>
           </div>
           <div class="pill-divider"></div>
+<div style="display:flex;flex-direction:column;align-items:center;gap:.25rem;flex-shrink:0"><span class="pill-label">Type</span><select class="owner-select" id="pl-type-select" onchange="setPlType(this.value)" style="width:92px"><option value="">All</option><option value="Inbound">&#x1F9F2; Inbound</option><option value="Outbound">&#x1F4E4; Outbound</option><option value="Event">&#x1F3A4; Event</option><option value="Unclassified">&#x2753; Unclassified</option></select></div>
+<div class="pill-divider"></div>
           <div style="display:flex;flex-direction:column;align-items:center;gap:.25rem;flex-shrink:0">
             <span class="pill-label">Source</span>
             <select class="owner-select" id="pl-source-select" onchange="setPlSrc(this.value)">
@@ -742,6 +753,8 @@
             </select>
           </div>
           <div class="pill-divider"></div>
+<div style="display:flex;flex-direction:column;align-items:center;gap:.25rem;flex-shrink:0"><span class="pill-label">Type</span><select class="owner-select" id="sb-type-select" onchange="renderSalesBreakdown()" style="width:92px"><option value="">All</option><option value="Inbound">&#x1F9F2; Inbound</option><option value="Outbound">&#x1F4E4; Outbound</option><option value="Event">&#x1F3A4; Event</option><option value="Unclassified">&#x2753; Unclassified</option></select></div>
+<div class="pill-divider"></div>
           <div style="display:flex;flex-direction:column;align-items:center;gap:.25rem;flex-shrink:0">
             <span class="pill-label">Source</span>
             <select class="owner-select" id="sb-source-select" onchange="renderSalesBreakdown()">
@@ -837,9 +850,11 @@
             <div id="lost-sector-pills" class="pill-group"></div>
           </div>
           <div class="pill-divider"></div>
+<div style="display:flex;flex-direction:column;align-items:center;gap:.25rem;flex-shrink:0"><span class="pill-label">Type</span><select class="owner-select" id="lost-type-select" onchange="renderLostTable()" style="font-size:.58rem;width:88px"><option value="">All</option><option value="Inbound">&#x1F9F2; Inbound</option><option value="Outbound">&#x1F4E4; Outbound</option><option value="Event">&#x1F3A4; Event</option><option value="Unclassified">&#x2753; Unclassified</option></select></div>
+<div class="pill-divider"></div>
           <div style="display:flex;flex-direction:column;align-items:center;gap:.25rem;flex-shrink:0">
             <span class="pill-label">Source</span>
-            <select class="owner-select" id="lost-source-select" onchange="renderLostTable()" style="font-size:.58rem">
+            <select class="owner-select" id="lost-source-select" onchange="renderLostTable()" style="font-size:.58rem;width:140px">
               <option value="">All</option>
               <option value="121 Outreach">121 Outreach</option>
               <option value="Advertising">Advertising</option>
@@ -878,7 +893,7 @@
           <div class="pill-divider"></div>
           <div style="display:flex;flex-direction:column;align-items:center;gap:.25rem;flex-shrink:0">
             <span class="pill-label">Lost Reason</span>
-            <select class="owner-select" id="lost-reason-select" onchange="renderLostTable()" style="min-width:110px;font-size:.58rem">
+            <select class="owner-select" id="lost-reason-select" onchange="renderLostTable()" style="width:150px;font-size:.58rem">
               <option value="">All</option>
               <option value="Bad fit/ not the right product for prospect">Bad fit/ not the right product for prospect</option>
               <option value="Chose a competitor (please enter which in lost deal comments)">Chose a competitor</option>
@@ -993,7 +1008,7 @@ async function fetchLostDeals(yr){
 function setLostYear(yr){
   lostState.year=yr; lostState.deals=null; lostState.loaded=false;
   lostFilters.region=null; lostFilters.sector=null;
-  ['lost-owner-select','lost-stage-select','lost-source-select','lost-reason-select'].forEach(id=>{
+  ['lost-owner-select','lost-stage-select','lost-source-select','lost-type-select','lost-reason-select'].forEach(id=>{
     const el=document.getElementById(id); if(el) el.value='';
   });
   [2025,2026].forEach(function(y){ const b=document.getElementById('lost-yr-'+y); if(b) b.classList.toggle('active',y===yr); });
@@ -1082,7 +1097,7 @@ function renderLostReasonChart(filteredDeals){
     angle+=slice;
     const x2=cx+r*Math.cos(angle),y2=cy+r*Math.sin(angle);
     const large=slice>Math.PI?1:0;
-    pieSvg+='<path d="M'+cx+','+cy+' L'+x1+','+y1+' A'+r+','+r+' 0 '+large+',1 '+x2+','+y2+' Z" fill="'+d.color+'" style="stroke:var(--surf)" stroke-width="1.2"><title>'+esc(d.lbl)+': '+d.n+'</title></path>';
+    pieSvg+='<path d="M'+cx+','+cy+' L'+x1+','+y1+' A'+r+','+r+' 0 '+large+',1 '+x2+','+y2+' Z" fill="'+d.color+'" style="stroke:var(--surf)" stroke-width="1.2"><title>'+esc(d.lbl)+' ('+srcType(d.lbl)+'): '+d.n+'</title></path>';
     if(slice>=0.25){
       const pct=Math.round(d.n/pieTotal*100);
       const iX=cx+(r+3)*Math.cos(midAngle),iY=cy+(r+3)*Math.sin(midAngle);
@@ -1120,7 +1135,9 @@ function renderLostTable(){
   if(fo) items=items.filter(d=>(d.owner_name||'').startsWith(fo));
   if(lostFilters.region) items=items.filter(d=>rg(d)===lostFilters.region);
   if(lostFilters.sector) items=items.filter(d=>sg(d)===lostFilters.sector);
-  if(fSource) items=items.filter(d=>getAttr(d[ATTR_FIELD])===fSource);
+  if(fSource) items=items.filter(d=>srcLabel(getAttr(d[ATTR_FIELD]))===fSource);
+  const fType=document.getElementById('lost-type-select')?.value||'';
+  if(fType) items=items.filter(d=>attrType(getAttr(d[ATTR_FIELD]))===fType);
   if(lostStages.size>0) items=items.filter(d=>lostStages.has(stageName(d)));
   if(fReason) items=items.filter(d=>(d.lost_reason||'').startsWith(fReason.split(' (')[0]));
   // Sort items
@@ -1167,7 +1184,7 @@ function renderLostTable(){
       +'<td class="cell-wrap tdm">'+esc(sg(d))+'</td>'
       +'<td class="tdm">'+esc(stageName(d))+'</td>'
       +'<td class="cell-wrap tdm">'+esc(classifyDeal(d)).split('|').join('<br>')+'</td>'
-      +'<td class="cell-wrap tdm">'+esc(getAttr(d[ATTR_FIELD]))+(getAttrDetail(d)?'<br><span style="color:var(--mute)">'+esc(getAttrDetail(d))+'</span>':'')+'</td>'
+      +'<td class="cell-wrap tdm">'+esc(srcDisplay(getAttr(d[ATTR_FIELD])))+(getAttrDetail(d)?'<br><span style="color:var(--mute)">'+esc(getAttrDetail(d))+'</span>':'')+'</td>'
       +'<td class="cell-wrap tdm">'+esc((d.lost_reason||'--').replace('Chose a competitor (please enter which in lost deal comments)','Chose a competitor').replace('Other (please specify in lost deal comments field)','Other'))+'</td>'
       +'<td class="cell-wrap tdm">'+esc(d[LOST_COMMENTS_FIELD]||'--')+'</td>'
       +'<td class="tdm">'+fmtD(d.lost_time)+'</td>'
@@ -1379,6 +1396,7 @@ async function renderSales(){
   const sbOwnerSel=document.getElementById('sb-owner-select'); if(sbOwnerSel) sbOwnerSel.value='';
   const sbOriginSel=document.getElementById('sb-origin-select'); if(sbOriginSel) sbOriginSel.value='';
   const sbSourceSel=document.getElementById('sb-source-select'); if(sbSourceSel) sbSourceSel.value='';
+  const sbTypeSel=document.getElementById('sb-type-select'); if(sbTypeSel) sbTypeSel.value='';
 
   // Stat cards — region and sector breakdowns with ARR
   const validCustomers = yearCustomers.filter(c=>!isWiped(c.name) && !isRemoved(c.name));
@@ -1502,7 +1520,7 @@ function openSalesDive(owner){
       +'<td class="cell-wrap tdm">'+esc(sector)+'</td>'
       +'<td class="tdm">'+arr+'</td>'
       +'<td class="cell-wrap tdm">'+esc(origin).split('|').join('<br>')+'</td>'
-      +'<td class="cell-wrap tdm">'+esc(source)+(getAttrDetail(d)?'<br><span style="color:var(--mute)">'+esc(getAttrDetail(d))+'</span>':'')+'</td>'
+      +'<td class="cell-wrap tdm">'+esc(srcDisplay(source))+(getAttrDetail(d)?'<br><span style="color:var(--mute)">'+esc(getAttrDetail(d))+'</span>':'')+'</td>'
       +'<td class="cell-wrap tdm">'+esc(srcDetail)+'</td>'
       +'<td class="tdm">'+fmtD(c.date)+'</td>'
       +'</tr>';
@@ -1553,7 +1571,9 @@ function renderSalesBreakdown(){
   const fOrigin=document.getElementById('sb-origin-select')?.value||'';
   const fSource=document.getElementById('sb-source-select')?.value||'';
   if(fOrigin) items=items.filter(c=>{ const d=salesState.dealMap[String(c.dealId)]; return d&&!d._stub&&classifyDeal(d).startsWith(fOrigin); });
-  if(fSource) items=items.filter(c=>{ const d=salesState.dealMap[String(c.dealId)]; return d&&!d._stub&&getAttr(d[ATTR_FIELD])===fSource; });
+  if(fSource) items=items.filter(c=>{ const d=salesState.dealMap[String(c.dealId)]; return d&&!d._stub&&srcLabel(getAttr(d[ATTR_FIELD]))===fSource; });
+  const fType=document.getElementById('sb-type-select')?.value||'';
+  if(fType) items=items.filter(c=>{ const d=salesState.dealMap[String(c.dealId)]; return d&&!d._stub&&attrType(getAttr(d[ATTR_FIELD]))===fType; });
   const ml=document.getElementById('sales-breakdown-month-label');
   if(ml) ml.textContent=mo?MONTHS[mo-1]+' '+yr:'';
   const nav=document.getElementById('sb-month-nav');
@@ -1581,7 +1601,7 @@ function renderSalesBreakdown(){
       +'<td class="tdm">'+fmtARR((salesState.finOpsARR&&salesState.finOpsARR[String(c.dealId)])||0)+'</td>'
       +(d&&!d._stub
         ?'<td class="cell-wrap tdm">'+esc(classifyDeal(d)).split('|').join('<br>')+'</td>'
-         +'<td class="cell-wrap tdm">'+esc(getAttr(d[ATTR_FIELD]))+(getAttrDetail(d)?'<br><span style="color:var(--mute)">'+esc(getAttrDetail(d))+'</span>':'')+'</td>'
+         +'<td class="cell-wrap tdm">'+esc(srcDisplay(getAttr(d[ATTR_FIELD])))+(getAttrDetail(d)?'<br><span style="color:var(--mute)">'+esc(getAttrDetail(d))+'</span>':'')+'</td>'
          +'<td class="cell-wrap tdm">'+esc(d[SRC_DETAIL_FIELD]||'--')+'</td>'
         :'<td class="tdm">--</td><td class="tdm">--</td><td class="tdm">--</td>')
       +'<td class="tdm">'+fmtD(c.date)+'</td>'
@@ -1752,6 +1772,7 @@ const S = {
   filterOwner: null,
   filterSource: null,
   filterAttr: null,
+  filterType: null,
   statsOffset: 0  // 0 = last complete month, 1 = 2 months ago, etc.
 };
 const expandedMonths = new Set();
@@ -2049,6 +2070,13 @@ function setAttr(val){
   renderOvTable();
 }
 
+function setType(val){
+  S.filterType=val||null;
+  const sel=document.getElementById('type-select');
+  if(sel){ sel.value=S.filterType||''; sel.className='owner-select'+(S.filterType?' active':''); }
+  renderOvTable();
+}
+
 function setSource(val){
   S.filterSource=val||null;
   const sel=document.getElementById('source-select');
@@ -2135,6 +2163,10 @@ function applyFilter(items, isArchived=false){
         ? (item.sourceChannelAttr||'')
         : getAttr(item[ATTR_FIELD]);
       if(srcLabel(attrVal)!==S.filterAttr) return false;
+    }
+    if(S.filterType){
+      const tv = isArchived ? (item.sourceChannelAttr||'') : getAttr(item[ATTR_FIELD]);
+      if(attrType(tv)!==S.filterType) return false;
     }
     return true;
   });
@@ -2332,7 +2364,7 @@ function sortItems(items){
 }
 
 const DIVE_SOURCES = ['Website Booking','Personal Link','Chatbot','Conference','Manually Added','Surfe / LinkedIn','Converted Lead'];
-const diveFilters = {owner:null, region:null, sector:null, source:null, attr:null, stage:null};
+const diveFilters = {owner:null, region:null, sector:null, source:null, attr:null, type:null, stage:null};
 
 function renderDiveFilters(){
   const rp=document.getElementById('dive-region-pills');
@@ -2352,10 +2384,13 @@ function renderDiveFilters(){
   if(ss){ ss.value=diveFilters.source||''; ss.className='owner-select'+(diveFilters.source?' active':''); }
   const as=document.getElementById('dive-attr-select');
   if(as){ as.value=diveFilters.attr||''; as.className='owner-select'+(diveFilters.attr?' active':''); }
+  const ts=document.getElementById('dive-type-select');
+  if(ts){ ts.value=diveFilters.type||''; ts.className='owner-select'+(diveFilters.type?' active':''); }
 }
 
 function setDiveOwner(val){ diveFilters.owner=val||null; renderDiveFilters(); renderDiveTbl(); }
 function setDiveSource(val){ diveFilters.source=val||null; renderDiveFilters(); renderDiveTbl(); }
+function setDiveType(val){ diveFilters.type=val||null; renderDiveFilters(); renderDiveTbl(); }
 function setDiveAttr(val){ diveFilters.attr=val||null; renderDiveFilters(); renderDiveTbl(); }
 function setDiveStage(val){ diveFilters.stage=val||null; renderDiveTbl(); }
 
@@ -2397,6 +2432,10 @@ function applyDiveFilter(items, isLead, isArchived){
       var attrVal = isArchived ? (item.attr||'--') : getAttr(item[ATTR_FIELD]);
       if(srcLabel(attrVal)!==diveFilters.attr) return false;
     }
+    if(diveFilters.type){
+      var tval = isArchived ? (item.attr||'--') : getAttr(item[ATTR_FIELD]);
+      if(attrType(tval)!==diveFilters.type) return false;
+    }
     if(diveFilters.stage && !isLead && !isArchived){
       if(stageName(item)!==diveFilters.stage) return false;
     }
@@ -2435,7 +2474,7 @@ function openDive(k){
   const dv=$('dive'); dv.style.display='block';
   setTimeout(()=>dv.scrollIntoView({behavior:'smooth',block:'start'}),40);
 }
-function closeDive(){ S.diveKey=null; $('dive').style.display='none'; diveFilters.owner=null; diveFilters.region=null; diveFilters.sector=null; diveFilters.source=null; diveFilters.attr=null; const dos=$('dive-owner-select'); if(dos) dos.value=''; const dss=$('dive-source-select'); if(dss) dss.value=''; const das=$('dive-attr-select'); if(das) das.value=''; renderChart(); renderMonthSourceWidgets(); }
+function closeDive(){ S.diveKey=null; $('dive').style.display='none'; diveFilters.owner=null; diveFilters.region=null; diveFilters.sector=null; diveFilters.source=null; diveFilters.attr=null; diveFilters.type=null; const dos=$('dive-owner-select'); if(dos) dos.value=''; const dss=$('dive-source-select'); if(dss) dss.value=''; const das=$('dive-attr-select'); if(das) das.value=''; const dts=$('dive-type-select'); if(dts){ dts.value=''; dts.className='owner-select'; } renderChart(); renderMonthSourceWidgets(); }
 function switchTab(tab){
   S.diveTab=tab;
   ['deals','leads'].forEach(t=>$('t-'+t).classList.toggle('on',t===tab));
@@ -2495,6 +2534,7 @@ function getDiveLeadItems(m){
       if(diveFilters.sector && item.sector!==diveFilters.sector) return false;
       if(diveFilters.source && !item.source.startsWith(diveFilters.source)) return false;
       if(diveFilters.attr && srcLabel(item.attr)!==diveFilters.attr) return false;
+      if(diveFilters.type && attrType(item.attr)!==diveFilters.type) return false;
       return true;
   });
 }
@@ -2509,9 +2549,34 @@ function getDiveLeadItems(m){
 const srcState = { mode: 'all', plMode: 'all' };
 let _srcCatCache = null;
 
+/* Source -> type coding (Inbound = they made the first move, Outbound = we did, Event = came from an event).
+   Edit here to recode a source. Anything not listed (e.g. Previous Sales Prospect, TBC, no source) is "Unclassified". */
+const SOURCE_TYPE = {
+  'AI Research':'Inbound','Chatbot':'Inbound','Referral':'Inbound','Search Engine':'Inbound',
+  'Software review site':'Inbound','Software review site (PPC)':'Inbound','Software review site (PPL)':'Inbound',
+  'Sponsorship':'Inbound','Word of Mouth':'Inbound','Previous Sales Prospect':'Inbound',
+  '121 Outreach':'Outbound','Marketing Email':'Outbound','Outbound Campaigns':'Outbound','Advertising':'Outbound',
+  'Conference':'Event','TT event':'Event','Webinar':'Event'
+};
+const SOURCE_TYPE_BY_LABEL = (function(){ const m={}; Object.keys(SOURCE_TYPE).forEach(function(k){ m[k.toLowerCase()]=SOURCE_TYPE[k]; }); return m; })();
+function srcType(label){ return SOURCE_TYPE_BY_LABEL[String(label||'').trim().toLowerCase()]||'Unclassified'; }
+function attrType(attrVal){ return srcType(srcLabel(attrVal)); }
+
+/* symbol shown next to a source: 🧲 inbound, 📣 outbound, 🎤 event, ❓ unknown / unclassified */
+const SOURCE_TYPE_ICON = { Inbound:'\u{1F9F2}', Outbound:'\u{1F4E4}', Event:'\u{1F3A4}', Unclassified:'\u2753' };
+function srcIcon(label){ return SOURCE_TYPE_ICON[srcType(label)]; }
+function srcDisplay(raw){   // text for a table cell: icon + the actual source as recorded
+  const none=(raw===undefined||raw===null||raw===''||raw==='--');
+  return srcIcon(none?'Unknown':srcLabel(raw))+' '+(none?'Unknown':String(raw));
+}
+
 function sourceCategories(){
   if(!_srcCatCache){
-    const named=[...new Set(Object.values(ATTR_MAP))].sort(function(a,b){ return a.localeCompare(b); });
+    const seen={}; const named=[];
+    Object.values(ATTR_MAP).concat(Object.keys(SOURCE_TYPE)).forEach(function(n){
+      const k=n.toLowerCase(); if(!seen[k]){ seen[k]=1; named.push(n); }
+    });
+    named.sort(function(a,b){ return a.localeCompare(b); });
     _srcCatCache={list:named.concat(['Unknown']),lower:{}};
     named.forEach(function(n){ _srcCatCache.lower[n.toLowerCase()]=n; });
   }
@@ -2525,11 +2590,13 @@ function srcLabel(v){
 function populateSourceSelects(){
   const opts=function(cur){
     return '<option value="">All</option>'+sourceCategories().map(function(x){
-      return '<option value="'+esc(x)+'"'+(x===cur?' selected':'')+'>'+esc(x)+'</option>';
+      return '<option value="'+esc(x)+'"'+(x===cur?' selected':'')+'>'+srcIcon(x)+' '+esc(x)+'</option>';
     }).join('');
   };
-  [['attr-select',S.filterAttr],['dive-attr-select',diveFilters.attr],['pl-source-select',window._plSrc]].forEach(function(pr){
-    const el=document.getElementById(pr[0]); if(el) el.innerHTML=opts(pr[1]||'');
+  [['attr-select',S.filterAttr],['dive-attr-select',diveFilters.attr],['pl-source-select',window._plSrc],['lost-source-select',null],['sb-source-select',null]].forEach(function(pr){
+    const el=document.getElementById(pr[0]); if(!el) return;
+    const cur=pr[1]===null ? el.value : (pr[1]||'');
+    el.innerHTML=opts(cur);
   });
 }
 function breakdownPalette(){
@@ -2592,7 +2659,7 @@ function buildSourcePie(rows,total,sel){
     const st='stroke:var(--surf);cursor:pointer;'+(dim?'opacity:.3;':'');
     const attrs=' fill="'+d.color+'" style="'+st+'" stroke-width="1.2" data-src-pick="'+esc(d.lbl)+'"';
     if(rows.length===1){
-      svg+='<circle cx="'+cx+'" cy="'+cy+'" r="'+r+'"'+attrs+'><title>'+esc(d.lbl)+': '+d.n+'</title></circle>';
+      svg+='<circle cx="'+cx+'" cy="'+cy+'" r="'+r+'"'+attrs+'><title>'+esc(d.lbl)+' ('+srcType(d.lbl)+'): '+d.n+'</title></circle>';
     } else {
       svg+='<path d="M'+cx+','+cy+' L'+x1+','+y1+' A'+r+','+r+' 0 '+large+',1 '+x2+','+y2+' Z"'+attrs+'><title>'+esc(d.lbl)+': '+d.n+'</title></path>';
     }
@@ -2635,9 +2702,9 @@ function renderSourceSection(host,heading,items,opts){
   const rowHtml=function(d){
     const pct=total?Math.round(d.n/total*100):0;
     const dim=sel&&sel!==d.lbl;
-    return '<tr data-src-pick="'+esc(d.lbl)+'" style="cursor:pointer;'+(dim?'opacity:.4;':'')+'">'
+    return '<tr data-src-pick="'+esc(d.lbl)+'" title="'+esc(d.lbl+' \u2014 '+srcType(d.lbl))+'" style="cursor:pointer;'+(dim?'opacity:.4;':'')+'">'
       +'<td style="width:10px;padding:.2rem .5rem .2rem 0"><span style="width:9px;height:9px;border-radius:50%;background:'+d.color+';display:inline-block"></span></td>'
-      +'<td style="font-family:var(--ff-mono);font-size:.65rem;color:var(--mute);padding:.2rem .6rem .2rem 0;white-space:nowrap'+(sel===d.lbl?';font-weight:700;color:var(--txt)':'')+'">'+esc(d.lbl)+'</td>'
+      +'<td style="font-family:var(--ff-mono);font-size:.65rem;color:var(--mute);padding:.2rem .6rem .2rem 0;white-space:nowrap'+(sel===d.lbl?';font-weight:700;color:var(--txt)':'')+'">'+srcIcon(d.lbl)+' '+esc(d.lbl)+'</td>'
       +'<td style="font-family:var(--ff-mono);font-size:.68rem;color:var(--grn);text-align:right;white-space:nowrap;font-weight:600">'+d.n+'</td>'
       +'<td style="font-family:var(--ff-mono);font-size:.58rem;color:var(--mute);text-align:right;padding-left:.5rem;white-space:nowrap">'+pct+'%</td>'
       +'</tr>';
@@ -2694,10 +2761,12 @@ function renderSourceSection(host,heading,items,opts){
 function ytdFiltersHtml(){
   const grp=function(label,inner){ return '<div style="display:flex;flex-direction:column;align-items:center;gap:.25rem;flex-shrink:0"><span class="pill-label">'+label+'</span>'+inner+'</div>'; };
   const div='<div class="pill-divider"></div>';
-  const select=function(cur,onchange,options){
-    return '<select class="owner-select'+(cur?' active':'')+'" onchange="'+onchange+'"><option value="">All</option>'
-      +options.map(function(o){ return '<option value="'+esc(o)+'"'+(o===cur?' selected':'')+'>'+esc(o)+'</option>'; }).join('')+'</select>';
+  const select=function(cur,onchange,options,labelFn){
+    return '<select class="owner-select'+(cur?' active':'')+'" onchange="'+onchange+'"'+(onchange.indexOf('setType')===0?' style="width:92px"':'')+'><option value="">All</option>'
+      +options.map(function(o){ return '<option value="'+esc(o)+'"'+(o===cur?' selected':'')+'>'+(labelFn?labelFn(o):'')+esc(o)+'</option>'; }).join('')+'</select>';
   };
+  const typeLbl=function(t){ return SOURCE_TYPE_ICON[t]+' '; };
+  const srcLbl=function(s){ return srcIcon(s)+' '; };
   const years='<div class="pill-group">'+getYears().map(function(y){ return '<button class="f-pill'+(S.yearFilter===y?' active':'')+'" data-pill-year="'+y+'">'+y+'</button>'; }).join('')+'</div>';
   const regions='<div class="pill-group">'+REGIONS.map(function(r){ return '<button class="f-pill'+(S.filterRegion===r?' active':'')+'" data-pill-region="'+r+'">'+r+'</button>'; }).join('')+'</div>';
   const sectors='<div style="display:flex;gap:.4rem;flex-wrap:nowrap">'+['Education','Membership Associations','Charity','Company'].map(function(s){
@@ -2708,7 +2777,8 @@ function ytdFiltersHtml(){
     +grp('Region',regions)+div
     +grp('Sector',sectors)+div
     +grp('Origin',select(S.filterSource,'setSource(this.value)',['Chatbot','Conference','Converted Lead','Manually Added','Personal Link','Surfe / LinkedIn','Website Booking']))+div
-    +grp('Source',select(S.filterAttr,'setAttr(this.value)',sourceCategories()))
+    +grp('Type',select(S.filterType,'setType(this.value)',['Inbound','Outbound','Event','Unclassified'],typeLbl))+div
+    +grp('Source',select(S.filterAttr,'setAttr(this.value)',sourceCategories(),srcLbl))
     +'</div>';
 }
 function renderYtdSourceWidgets(){
@@ -2733,8 +2803,12 @@ function renderMonthSourceWidgets(){
 function plRegionOf(x){ return Object.keys(REGION_ID).find(function(r){ return REGION_ID[r]===Number(x[REGION_FIELD]); })||'--'; }
 function plSectorOf(x){ return Object.keys(SECTOR_ID).find(function(s){ return SECTOR_ID[s]===Number(x[SECTOR_FIELD]); })||'--'; }
 function plItems(ignoreSrc){
-  const reg=window._plRegion||null, sec=window._plSector||null, src=ignoreSrc?null:(window._plSrc||null);
+  const reg=window._plRegion||null, sec=window._plSector||null, src=ignoreSrc?null:(window._plSrc||null), typ=window._plType||null;
   let deals=getOpenDeals(), leads=getOpenLeads();
+  if(typ){
+    deals=deals.filter(function(d){ return attrType(getAttr(d[ATTR_FIELD]))===typ; });
+    leads=leads.filter(function(l){ return attrType(getAttr(l[ATTR_FIELD]))===typ; });
+  }
   if(reg){ deals=deals.filter(function(d){ return plRegionOf(d)===reg; }); leads=leads.filter(function(l){ return plRegionOf(l)===reg; }); }
   if(sec){ deals=deals.filter(function(d){ return plSectorOf(d)===sec; }); leads=leads.filter(function(l){ return plSectorOf(l)===sec; }); }
   if(src){
@@ -2772,6 +2846,19 @@ function renderPlOwnerWidget(){
   host.style.display='block';
   renderSourceSection(host,'source breakdown \u2014 '+(owner==='__all__'?'all open deals & leads':owner.split(' ')[0]),plWidgetItems(dd,ll),
     {ctx:'pl-owner',selected:window._plSrc||null});
+}
+function setPlType(val){
+  window._plType=val||null;
+  syncPlTypeSelects();
+  renderPipeline();
+  const ex=document.getElementById('pl-expanded');
+  if(ex && ex.style.display!=='none') renderPlDiveTbl();
+}
+function syncPlTypeSelects(){
+  ['pl-top-type-select','pl-type-select'].forEach(function(id){
+    const el=document.getElementById(id);
+    if(el){ el.value=window._plType||''; el.className='owner-select'+(window._plType?' active':''); }
+  });
 }
 function setPlSrc(val){
   window._plSrc=val||null;
@@ -2832,7 +2919,7 @@ function renderDiveTbl(){
         +'<td class="tdm">'+esc(Object.keys(REGION_ID).find(r=>REGION_ID[r]===Number(d[REGION_FIELD]))||'--')+'</td>'
         +'<td class="cell-wrap tdm">'+esc(Object.keys(SECTOR_ID).find(s=>SECTOR_ID[s]===Number(d[SECTOR_FIELD]))||'--')+'</td>'
         +'<td class="cell-wrap tdm">'+classifyDeal(d).split('|').map(esc).join('<br>')+'</td>'
-        +'<td class="cell-wrap tdm">'+esc(getAttr(d[ATTR_FIELD]))+(getAttrDetail(d)?'<br><span style="color:var(--mute)">'+esc(getAttrDetail(d))+'</span>':'')+'</td>'
+        +'<td class="cell-wrap tdm">'+esc(srcDisplay(getAttr(d[ATTR_FIELD])))+(getAttrDetail(d)?'<br><span style="color:var(--mute)">'+esc(getAttrDetail(d))+'</span>':'')+'</td>'
         +'<td class="cell-wrap tdm">'+esc(d[SRC_DETAIL_FIELD]||'--')+'</td>'
         +'<td class="cell-wrap">'+dealStatusHtml(d)+'</td>'
         +'<td class="tdm">'+fmtD(d.add_time)+'</td>'
@@ -2858,7 +2945,7 @@ function renderDiveTbl(){
         +'<td class="tdm">'+esc(l.region)+'</td>'
         +'<td class="cell-wrap tdm">'+esc(l.sector)+'</td>'
         +'<td class="cell-wrap tdm">'+(l.source||'--').split('|').map(esc).join('<br>')+'</td>'
-        +'<td class="cell-wrap tdm">'+esc(l.attr||'--')+(l.attrDetail?'<br><span style="color:var(--mute)">'+esc(l.attrDetail)+'</span>':'')+'</td>'
+        +'<td class="cell-wrap tdm">'+esc(srcDisplay(l.attr))+(l.attrDetail?'<br><span style="color:var(--mute)">'+esc(l.attrDetail)+'</span>':'')+'</td>'
         +'<td class="cell-wrap tdm">'+esc(l.srcDetail||'--')+'</td>'
         +'<td class="cell-wrap"><span class="pill pill-'+l.status+'">'+l.status+'</span>'
           +(l.dealStatus?'<div style="margin-top:.3rem"><span class="pill pill-'+l.dealStatus+'">deal '+l.dealStatus+'</span>'
@@ -2995,6 +3082,7 @@ function leadOwnerLabel(lead){
 
 function renderPipeline(){
   renderPlRegionSectorPills();
+  syncPlTypeSelects();
   const _pl = plItems(false);
   const openDeals = _pl.deals;
   const openLeads = _pl.leads;
@@ -3142,6 +3230,7 @@ function renderPlDiveTbl(){
     if(filterSector) items=items.filter(d=>sg(d)===filterSector);
     if(filterOrigin) items=items.filter(d=>classifyDeal(d).startsWith(filterOrigin));
     if(filterSource) items=items.filter(d=>srcLabel(getAttr(d[ATTR_FIELD]))===filterSource);
+    if(window._plType) items=items.filter(d=>attrType(getAttr(d[ATTR_FIELD]))===window._plType);
     if(filterStage)  items=items.filter(d=>(stageName(d))===filterStage);
     items.sort((a,b)=>new Date(b.add_time)-new Date(a.add_time));
     document.getElementById('pl-dive-stats').innerHTML =
@@ -3159,7 +3248,7 @@ function renderPlDiveTbl(){
         +'<td class="cell-wrap tdm">'+esc(sg(d))+'</td>'
         +'<td class="tdm">'+esc(stageName(d))+'</td>'
         +'<td class="cell-wrap tdm">'+esc(classifyDeal(d))+'</td>'
-        +'<td class="cell-wrap tdm">'+esc(getAttr(d[ATTR_FIELD]))+(getAttrDetail(d)?'<br><span style="color:var(--mute)">'+esc(getAttrDetail(d))+'</span>':'')+'</td>'
+        +'<td class="cell-wrap tdm">'+esc(srcDisplay(getAttr(d[ATTR_FIELD])))+(getAttrDetail(d)?'<br><span style="color:var(--mute)">'+esc(getAttrDetail(d))+'</span>':'')+'</td>'
         +'<td class="cell-wrap tdm">'+esc(d[SRC_DETAIL_FIELD]||'--')+'</td>'
         +'<td class="tdm">'+fmtD(d.add_time)+'</td>'
         +'</tr>').join('')+'</tbody></table>';
@@ -3169,6 +3258,7 @@ function renderPlDiveTbl(){
     if(filterSector) items=items.filter(l=>(Object.keys(SECTOR_ID).find(x=>SECTOR_ID[x]===Number(l[SECTOR_FIELD]))||'--')===filterSector);
     if(filterOrigin) items=items.filter(l=>classifyLead(l).startsWith(filterOrigin));
     if(filterSource) items=items.filter(l=>srcLabel(getAttr(l[ATTR_FIELD]))===filterSource);
+    if(window._plType) items=items.filter(l=>attrType(getAttr(l[ATTR_FIELD]))===window._plType);
     items.sort((a,b)=>new Date(b.add_time)-new Date(a.add_time));
     const lgr = l => Object.keys(REGION_ID).find(x=>REGION_ID[x]===Number(l[REGION_FIELD]))||'--';
     const lgs = l => Object.keys(SECTOR_ID).find(x=>SECTOR_ID[x]===Number(l[SECTOR_FIELD]))||'--';
@@ -3186,7 +3276,7 @@ function renderPlDiveTbl(){
         +'<td class="tdm">'+esc(lgr(l))+'</td>'
         +'<td class="cell-wrap tdm">'+esc(lgs(l))+'</td>'
         +'<td class="cell-wrap tdm">'+esc(classifyLead(l))+'</td>'
-        +'<td class="cell-wrap tdm">'+esc(getAttr(l[ATTR_FIELD]))+'</td>'
+        +'<td class="cell-wrap tdm">'+esc(srcDisplay(getAttr(l[ATTR_FIELD])))+'</td>'
         +'<td class="cell-wrap tdm">'+esc(l[SRC_DETAIL_FIELD]||'--')+'</td>'
         +'<td class="tdm">'+fmtD(l.add_time)+'</td>'
         +'</tr>').join('')+'</tbody></table>';
@@ -3206,7 +3296,7 @@ async function init(){
   $('spin').style.display='flex';
   $('dive').style.display='none';
   $('upload-panel').style.display='none';
-  S.diveKey=null; S.chartOffset=0; S.yearFilter=null; S.filterRegion=null; S.filterSector=null; S.filterOwner=null; S.filterSource=null; S.filterAttr=null; S.statsOffset=0;
+  S.diveKey=null; S.chartOffset=0; S.yearFilter=null; S.filterRegion=null; S.filterSector=null; S.filterOwner=null; S.filterSource=null; S.filterAttr=null; S.filterType=null; S.statsOffset=0;
   S.openDeals=null;
   salesState.loaded=false; salesState.customers=[]; salesState.dealMap={}; salesState.finOpsARR=null; salesState.finOpsYear=null;
   lostState.loaded=false; lostState.deals=null;
@@ -3216,6 +3306,8 @@ async function init(){
   if(srcSel) srcSel.value='';
   const attrSel=document.getElementById('attr-select');
   if(attrSel) attrSel.value='';
+  const typeSel=document.getElementById('type-select');
+  if(typeSel){ typeSel.value=''; typeSel.className='owner-select'; }
   expandedMonths.clear();
 
   try{
