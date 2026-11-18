@@ -573,7 +573,7 @@
       <div class="sec-lbl" style="margin-bottom:0;flex:1">currently open — live snapshot</div>
       <button class="star-btn" id="star-btn" onclick="toggleStar()">&#x2B50; STAR Mode</button>
     </div>
-    <p style="font-family:var(--ff-mono);font-size:.62rem;color:var(--mute);margin-bottom:1rem;line-height:1.6">Click the <span style="color:var(--pur)">Open Deals</span> or <span style="color:var(--grn)">Open Leads</span> card to see all open items &mdash; or click any salesperson&rsquo;s name in the tables below to drill into their pipeline.</p>
+    <p style="font-family:var(--ff-mono);font-size:.62rem;color:var(--mute);margin-bottom:1rem;line-height:1.6">Click the <span style="color:var(--pur)">Open Deals</span> or <span style="color:var(--grn)">Open Leads</span> card to see all open items &mdash; or click any salesperson&rsquo;s name in the tables below to drill into their pipeline.<span id="pl-asof"></span></p>
     <div style="display:flex;align-items:flex-start;gap:.6rem;flex-wrap:wrap;margin-bottom:1rem">
       <div style="display:flex;flex-direction:column;align-items:center;gap:.25rem;flex-shrink:0">
         <span class="pill-label">Region</span>
@@ -920,6 +920,7 @@
 <script>
 const WORKER_URL      = 'https://opportunities-analysis.felicity-c91.workers.dev';
 const EXCLUDED_PIPELINE = 9;
+const MAIN_PIPELINE = 11;   // open deals are counted for the Main Pipeline only (matches Pipedrive's own count)
 const STAR_LABEL_ID = 1368;
 function isStarDeal(d){ return d.label===STAR_LABEL_ID || String(d.label)===String(STAR_LABEL_ID) || (d.title&&d.title.startsWith('***')); }
 function isStarLead(l){ return l.title&&l.title.startsWith('***'); }
@@ -1840,11 +1841,12 @@ async function fetchOpenDeals(){
       +'&custom_fields[]='+SRC_DETAIL_FIELD
 );
     if(!d.success) throw new Error(d.error||'Open deals fetch failed');
-    all=all.concat((d.data||[]).filter(x=>x.pipeline_id !== EXCLUDED_PIPELINE));
+    all=all.concat((d.data||[]).filter(x=>x.pipeline_id === MAIN_PIPELINE));
     if(!d.additional_data?.pagination?.more_items_in_collection) break;
     start+=500;
   }
-  return all;
+  const seen=new Set();   // guard against a deal appearing twice across pages
+  return all.filter(function(x){ if(seen.has(x.id)) return false; seen.add(x.id); return true; });
 }
 
 async function fetchCurrency(){
@@ -2556,7 +2558,7 @@ const SOURCE_TYPE = {
   'Software review site':'Inbound','Software review site (PPC)':'Inbound','Software review site (PPL)':'Inbound',
   'Sponsorship':'Inbound','Word of Mouth':'Inbound','Previous Sales Prospect':'Inbound',
   '121 Outreach':'Outbound','Marketing Email':'Outbound','Outbound Campaigns':'Outbound','Advertising':'Outbound',
-  'Conference':'Event','TT event':'Event','Webinar':'Event'
+  'Conference':'Event','Event (ToucanTech hosted)':'Event','Webinar':'Event'
 };
 const SOURCE_TYPE_BY_LABEL = (function(){ const m={}; Object.keys(SOURCE_TYPE).forEach(function(k){ m[k.toLowerCase()]=SOURCE_TYPE[k]; }); return m; })();
 function srcType(label){ return SOURCE_TYPE_BY_LABEL[String(label||'').trim().toLowerCase()]||'Unclassified'; }
@@ -3050,18 +3052,23 @@ function setMode(m){
   if(m==='opps'){ starMode=false; const sbtn=document.getElementById('star-btn'); if(sbtn){sbtn.classList.remove('on');sbtn.textContent='⭐ STAR Mode';} }
 
   if(m==='pipeline'){
-    if(!S.openDeals){
-      renderPipeline(); // renders with null openDeals first (shows stat cards)
-      fetchOpenDeals().then(od=>{ S.openDeals=od; renderPipeline(); });
-    } else {
-      renderPipeline();
-    }
+    renderPipeline();   // instant render from what we already have
+    fetchOpenDeals().then(function(od){
+      S.openDeals=od; S.openDealsAt=new Date();
+      renderPipeline(); setPlAsOf();
+      const ex=document.getElementById('pl-expanded');
+      if(ex && ex.style.display!=='none') renderPlDiveTbl();
+    }).catch(function(e){ console.warn('Open deals refresh failed', e); });
   }
 }
 
 /* All open items (fetched already) */
+function setPlAsOf(){
+  const el=document.getElementById('pl-asof');
+  if(el) el.textContent = S.openDealsAt ? ' \u00b7 Open deals (Main Pipeline) as of '+S.openDealsAt.toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'}) : '';
+}
 function getOpenDeals(){
-  const base = S.openDeals || S.deals.filter(d=>d.status==='open' && !isConvertedDeal(d));
+  const base = S.openDeals || S.deals.filter(d=>d.status==='open' && !isConvertedDeal(d) && d.pipeline_id===MAIN_PIPELINE);
   return starMode ? base.filter(isStarDeal) : base;
 }
 function getOpenLeads(){
